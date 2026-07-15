@@ -33,19 +33,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Listen to Firebase auth state changes automatically
         const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
             setUser(currentUser);
+            setLoading(false); // Set false immediately so UI renders instantly without waiting on Firestore network
+
             if (currentUser) {
-                // Automatically ensure their profile exists in Firestore
-                try {
-                    await createOrUpdateUserProfile(currentUser.uid, {
-                        email: currentUser.email,
-                        displayName: currentUser.displayName,
-                        photoURL: currentUser.photoURL,
-                    });
-                } catch (error) {
+                // Automatically ensure their profile exists in Firestore (running asynchronously)
+                createOrUpdateUserProfile(currentUser.uid, {
+                    email: currentUser.email,
+                    displayName: currentUser.displayName,
+                    photoURL: currentUser.photoURL,
+                }).catch((error) => {
                     console.error("Error updating user profile in Firestore:", error);
-                }
+                });
             }
-            setLoading(false);
         });
 
         return () => unsubscribe();
