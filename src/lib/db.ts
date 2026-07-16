@@ -77,7 +77,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
             getPromise,
             new Promise<UserProfile | null>((resolve) => setTimeout(() => resolve(localProfile), 1500))
         ]);
-        return result;
+        return result || localProfile;
     } catch (e) {
         console.warn("Firestore error getting user profile, returning local:", e);
         return localProfile;
@@ -90,7 +90,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 
 /**
  * Creates a new landing page.
- * Saves to localStorage instantly and fires off background Firestore request.
+ * Saves to localStorage instantly and fires off background Firestore request with identical ID.
  */
 export async function createLandingPage(page: Omit<LandingPage, "id">): Promise<string> {
     const generatedId = "local_" + Math.random().toString(36).substring(2, 11);
@@ -108,28 +108,12 @@ export async function createLandingPage(page: Omit<LandingPage, "id">): Promise<
         localStorage.setItem("pageforge_local_pages", JSON.stringify(localPages));
     }
 
-    // Fire-and-forget Firestore write
+    // Fire-and-forget Firestore write using the exact same ID
     if (db) {
-        const newDocRef = doc(collection(db, "pages"));
-        const firestorePageData: LandingPage = {
-            ...page,
-            id: newDocRef.id,
-            createdAt: Date.now(),
-            updatedAt: Date.now(),
-        };
-        
-        setDoc(newDocRef, firestorePageData)
-            .then(() => {
-                if (isBrowser) {
-                    const stored = localStorage.getItem("pageforge_local_pages");
-                    let localPages: LandingPage[] = stored ? JSON.parse(stored) : [];
-                    localPages = localPages.map(p => p.id === generatedId ? firestorePageData : p);
-                    localStorage.setItem("pageforge_local_pages", JSON.stringify(localPages));
-                }
-            })
-            .catch((err) => {
-                console.warn("Background Firestore write failed:", err);
-            });
+        const docRef = doc(db, "pages", generatedId);
+        setDoc(docRef, pageData).catch((err) => {
+            console.warn("Background Firestore write failed:", err);
+        });
     }
 
     return generatedId;
@@ -137,7 +121,7 @@ export async function createLandingPage(page: Omit<LandingPage, "id">): Promise<
 
 /**
  * Fetches a single landing page by its unique ID.
- * If the page is prefixed with "local_", returns it immediately from localStorage.
+ * Checks localStorage first for immediate render, then checks Firestore.
  */
 export async function getLandingPageById(pageId: string): Promise<LandingPage | null> {
     let localPage: LandingPage | null = null;
@@ -149,8 +133,8 @@ export async function getLandingPageById(pageId: string): Promise<LandingPage | 
         }
     }
 
-    // If it's a client-only local page, return it immediately with no Firestore latency
-    if (pageId.startsWith("local_")) {
+    // If we already have the page locally, return it immediately so preview opens instantly
+    if (localPage) {
         return localPage;
     }
 
@@ -179,7 +163,7 @@ export async function getLandingPageById(pageId: string): Promise<LandingPage | 
             getPromise,
             new Promise<LandingPage | null>((resolve) => setTimeout(() => resolve(localPage), 1500))
         ]);
-        return result;
+        return result || localPage;
     } catch (e) {
         console.warn("Firestore error getting page, returning local:", e);
         return localPage;
@@ -188,7 +172,7 @@ export async function getLandingPageById(pageId: string): Promise<LandingPage | 
 
 /**
  * Fetches all landing pages belonging to a specific user.
- * Combines localStorage pages and Firestore pages.
+ * Merges localStorage pages and Firestore pages safely without wiping local state.
  */
 export async function getUserLandingPages(userId: string): Promise<LandingPage[]> {
     let localPages: LandingPage[] = [];
@@ -214,10 +198,16 @@ export async function getUserLandingPages(userId: string): Promise<LandingPage[]
             });
             if (isBrowser) {
                 const stored = localStorage.getItem("pageforge_local_pages");
-                let allPages: LandingPage[] = stored ? JSON.parse(stored) : [];
-                allPages = allPages.filter(p => p.userId !== userId);
-                allPages.push(...fetchedPages);
-                localStorage.setItem("pageforge_local_pages", JSON.stringify(allPages));
+                const allPages: LandingPage[] = stored ? JSON.parse(stored) : [];
+                
+                // Merge local pages and fetched pages safely by ID
+                const mergedMap = new Map<string, LandingPage>();
+                for (const p of allPages) if (p.id) mergedMap.set(p.id, p);
+                for (const p of fetchedPages) if (p.id) mergedMap.set(p.id, p);
+                
+                const combined = Array.from(mergedMap.values());
+                localStorage.setItem("pageforge_local_pages", JSON.stringify(combined));
+                return combined.filter(p => p.userId === userId);
             }
             return fetchedPages;
         });
@@ -226,16 +216,21 @@ export async function getUserLandingPages(userId: string): Promise<LandingPage[]
             getPromise,
             new Promise<LandingPage[]>((resolve) => setTimeout(() => resolve(localPages), 1500))
         ]);
-        return result;
+        
+        // Ensure that local pages are always combined with any fetched result
+        const resultMap = new Map<string, LandingPage>();
+        for (const p of localPages) if (p.id) resultMap.set(p.id, p);
+        for (const p of result) if (p.id) resultMap.set(p.id, p);
+        return Array.from(resultMap.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     } catch (e) {
         console.warn("Firestore error fetching pages, returning local pages:", e);
-        return localPages;
+        return localPages.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
     }
 }
 
 /**
  * Updates an existing landing page.
- * Falls back to localStorage instantly and fires off background Firestore update.
+ * Updates localStorage instantly and fires off background Firestore update.
  */
 export async function updateLandingPage(pageId: string, updates: Partial<LandingPage>): Promise<void> {
     if (isBrowser) {
@@ -252,8 +247,7 @@ export async function updateLandingPage(pageId: string, updates: Partial<Landing
         }
     }
 
-    // Fire-and-forget Firestore write (only if not a client-only local page)
-    if (db && !pageId.startsWith("local_")) {
+    if (db) {
         const docRef = doc(db, "pages", pageId);
         setDoc(docRef, {
             ...updates,
@@ -266,7 +260,7 @@ export async function updateLandingPage(pageId: string, updates: Partial<Landing
 
 /**
  * Deletes a landing page completely.
- * Falls back to localStorage instantly and fires off background Firestore deletion.
+ * Deletes from localStorage instantly and fires off background Firestore deletion.
  */
 export async function deleteLandingPage(pageId: string): Promise<void> {
     if (isBrowser) {
@@ -278,8 +272,7 @@ export async function deleteLandingPage(pageId: string): Promise<void> {
         }
     }
 
-    // Fire-and-forget Firestore deletion (only if not a client-only local page)
-    if (db && !pageId.startsWith("local_")) {
+    if (db) {
         const docRef = doc(db, "pages", pageId);
         deleteDoc(docRef).catch((err) => {
             console.warn("Background Firestore delete failed:", err);

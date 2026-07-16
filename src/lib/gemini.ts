@@ -9,12 +9,12 @@ const ai = apiKey ? new GoogleGenAI({ apiKey }) : null;
  * Sends a prompt to Google Gemini (gemini-2.5-flash) asking for a complete, structured landing page in JSON format.
  */
 export async function generateLandingPageAI(promptText: string): Promise<Omit<LandingPage, "id" | "createdAt" | "updatedAt">> {
-    if (!ai) {
-        throw new Error("GEMINI_API_KEY is missing inside your .env.local file. Please add it and restart your dev server!");
-    }
+  if (!ai) {
+    throw new Error("GEMINI_API_KEY is missing inside your .env.local file. Please add it and restart your dev server!");
+  }
 
-    // This is the strict instructions we send to Gemini so it acts as an expert copywriter & web designer
-    const systemPrompt = `
+  // This is the strict instructions we send to Gemini so it acts as an expert copywriter & web designer
+  const systemPrompt = `
 You are PageForge AI, a world-class landing page copywriter, conversion rate optimization (CRO) expert, and UX designer.
 The user will describe their product, service, SaaS, or course idea.
 Your job is to generate a complete, high-converting landing page structured exactly as a JSON object.
@@ -34,7 +34,8 @@ JSON Structure Schema:
       "title": "A bold, punchy, high-converting main headline (8-10 words)",
       "subtitle": "A persuasive subheadline explaining exactly how the product solves the customer's biggest pain point (15-25 words)",
       "ctaText": "Action-oriented button text (e.g., 'Start Your Free 14-Day Trial', 'Get Instant Access')",
-      "ctaLink": "#signup"
+      "ctaLink": "#signup",
+      "imageSearchQuery": "A descriptive 3-5 word English search query to find a beautiful, relevant landing page stock photo on Unsplash (e.g., 'minimalist tech dashboard illustration', 'person tracking workouts fitness app', 'online classroom workspace dashboard')"
     },
     {
       "id": "features-1",
@@ -43,16 +44,16 @@ JSON Structure Schema:
       "subtitle": "Designed specifically for modern teams and creators who want results fast.",
       "content": [
         {
-          "title": "Benefit / Feature Title 1",
-          "description": "Clear 2-sentence explanation of why this feature saves time, money, or stress."
+          "title": "Feature Title 1",
+          "description": "Clear 2-sentence explanation of why this feature saves time or stress."
         },
         {
-          "title": "Benefit / Feature Title 2",
-          "description": "Clear 2-sentence explanation of why this feature saves time, money, or stress."
+          "title": "Feature Title 2",
+          "description": "Clear 2-sentence explanation of why this feature saves time or stress."
         },
         {
-          "title": "Benefit / Feature Title 3",
-          "description": "Clear 2-sentence explanation of why this feature saves time, money, or stress."
+          "title": "Feature Title 3",
+          "description": "Clear 2-sentence explanation of why this feature saves time or stress."
         }
       ]
     },
@@ -73,7 +74,7 @@ JSON Structure Schema:
           "plan": "Pro / Growth",
           "price": "$29",
           "period": "per month",
-          "features": ["All Starter features", "Unlimited generation", "Priority 24/7 VIP support", "Custom branding"],
+          "features": ["All Starter features", "Unlimited generation", "Priority 24/7 support"],
           "ctaText": "Start Pro Trial"
         }
       ]
@@ -90,11 +91,7 @@ JSON Structure Schema:
         },
         {
           "question": "Can I cancel or change my plan anytime?",
-          "answer": "Yes, absolutely! There are no long-term contracts. You can upgrade, downgrade, or cancel directly from your account settings."
-        },
-        {
-          "question": "Do you offer refunds or guarantees?",
-          "answer": "We offer a 100% satisfaction guarantee. If you aren't thrilled within your first 14 days, we will refund every penny."
+          "answer": "Yes, absolutely! You can cancel directly from your account settings at any time."
         }
       ]
     },
@@ -110,34 +107,34 @@ JSON Structure Schema:
 }
 `.trim();
 
-    try {
-        // Call the Gemini 2.5 Flash model requesting pure JSON output
-        const response = await ai.models.generateContent({
-            model: "gemini-2.5-flash",
-            contents: [
-                { role: "user", parts: [{ text: `Generate a high-converting landing page for: ${promptText}` }] }
-            ],
-            config: {
-                systemInstruction: systemPrompt,
-                responseMimeType: "application/json",
-                temperature: 0.7,
-            },
-        });
+  try {
+    // Call the Gemini 2.5 Flash model requesting pure JSON output
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: [
+        { role: "user", parts: [{ text: `Generate a high-converting landing page for: ${promptText}` }] }
+      ],
+      config: {
+        systemInstruction: systemPrompt,
+        responseMimeType: "application/json",
+        temperature: 0.7,
+      },
+    });
 
-        const rawJsonText = response.text || "{}";
-        const parsedData = JSON.parse(rawJsonText);
+    const rawJsonText = response.text || "{}";
+    const parsedData = JSON.parse(rawJsonText);
 
-        // Return the clean structured page object ready to be saved to Firestore
-        return {
-            title: parsedData.title || "AI Generated Page",
-            description: parsedData.description || promptText,
-            userId: "", // Will be assigned by the API route to the logged-in user
-            isPublished: false,
-            sections: Array.isArray(parsedData.sections) ? parsedData.sections : [],
-            themeColor: parsedData.themeColor || "#6366f1",
-        };
-    } catch (error) {
-        console.error("Error calling Google Gemini API:", error);
-        throw new Error("Failed to generate landing page with AI. Please check your API key or network connection.");
-    }
+    // Return the clean structured page object ready to be saved to Firestore
+    return {
+      title: parsedData.title || "AI Generated Page",
+      description: parsedData.description || promptText,
+      userId: "", // Will be assigned by the API route to the logged-in user
+      isPublished: false,
+      sections: Array.isArray(parsedData.sections) ? parsedData.sections : [],
+      themeColor: parsedData.themeColor || "#6366f1",
+    };
+  } catch (error) {
+    console.error("Error calling Google Gemini API:", error);
+    throw new Error("Failed to generate landing page with AI. Please check your API key or network connection.");
+  }
 }

@@ -23,7 +23,8 @@ export interface PageSection {
     subtitle?: string;
     ctaText?: string;
     ctaLink?: string;
-    // `content` is a flexible array used by features, pricing, faq, testimonials
+    imageUrl?: string;        // <-- ADD THIS: Holds the final visual URL
+    imageSearchQuery?: string; // <-- ADD THIS: Holds the search term used for Unsplash
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content?: any[];
 }
