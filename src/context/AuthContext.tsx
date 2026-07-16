@@ -9,7 +9,8 @@ import {
     signOut as firebaseSignOut
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
-import { createOrUpdateUserProfile } from "@/lib/db";
+import { doc, setDoc } from "firebase/firestore";
+import { db } from "@/lib/firebase";
 
 interface AuthContextType {
     user: User | null;
@@ -30,19 +31,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
-        // Listen to Firebase auth state changes automatically
-        const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+        const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
             setUser(currentUser);
-            setLoading(false); // Set false immediately so UI renders instantly without waiting on Firestore network
+            setLoading(false);
 
+            // Fire-and-forget: write user profile to Firestore.
+            // Using setDoc with merge directly here — no getDoc needed.
+            // If Firestore is temporarily offline, the write queues locally
+            // and syncs when back online. We intentionally silence errors
+            // so the UI never blocks on network issues.
             if (currentUser) {
-                // Automatically ensure their profile exists in Firestore (running asynchronously)
-                createOrUpdateUserProfile(currentUser.uid, {
+                const userRef = doc(db, "users", currentUser.uid);
+                setDoc(userRef, {
+                    uid: currentUser.uid,
                     email: currentUser.email,
                     displayName: currentUser.displayName,
                     photoURL: currentUser.photoURL,
-                }).catch((error) => {
-                    console.error("Error updating user profile in Firestore:", error);
+                }, { merge: true }).catch(() => {
+                    // Silently swallow — Firestore will retry when online
                 });
             }
         });

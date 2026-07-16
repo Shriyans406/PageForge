@@ -28,15 +28,21 @@ export default function DashboardPage() {
         }
     }, [user, authLoading, router]);
 
-    // Fetch user's pages when user loads
+    // Fetch user's pages when user loads (with 10s timeout to prevent infinite spinner)
     useEffect(() => {
         async function fetchPages() {
             if (user) {
                 try {
-                    const userPages = await getUserLandingPages(user.uid);
+                    const timeoutPromise = new Promise<LandingPage[]>((_, reject) =>
+                        setTimeout(() => reject(new Error("Firestore request timed out")), 10000)
+                    );
+                    const userPages = await Promise.race([
+                        getUserLandingPages(user.uid),
+                        timeoutPromise,
+                    ]);
                     setPages(userPages);
                 } catch (error) {
-                    console.error("Error fetching pages:", error);
+                    console.warn("Could not fetch pages (Firestore may be offline):", error);
                 } finally {
                     setLoadingPages(false);
                 }
@@ -44,6 +50,7 @@ export default function DashboardPage() {
         }
         fetchPages();
     }, [user]);
+
 
     // 1. Create simple test page (Phase 1 button)
     const handleCreateTestPage = async () => {

@@ -1,7 +1,6 @@
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
-import { getFirestore, initializeFirestore } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { initializeFirestore, getFirestore, connectFirestoreEmulator } from "firebase/firestore";
 
 // Read Firebase configuration from our secret .env.local file
 const firebaseConfig = {
@@ -15,13 +14,15 @@ const firebaseConfig = {
 
 // Initialize Firebase only once (prevents duplicate errors when Next.js reloads)
 let app;
-let dbInstance;
+let dbInstance: ReturnType<typeof getFirestore>;
 
 if (!getApps().length) {
     app = initializeApp(firebaseConfig);
     try {
         dbInstance = initializeFirestore(app, {
             experimentalForceLongPolling: true,
+            // Increase the cache size to reduce network dependency
+            cacheSizeBytes: 50 * 1024 * 1024, // 50MB
         });
     } catch {
         dbInstance = getFirestore(app);
@@ -31,8 +32,7 @@ if (!getApps().length) {
     dbInstance = getFirestore(app);
 }
 
-// Export the Auth, Firestore Database, and Cloud Storage instances to use across our app
+// Export the Auth and Firestore Database instances to use across our app
 export const auth = getAuth(app);
 export const db = dbInstance;
-export const storage = getStorage(app);
 export default app;
