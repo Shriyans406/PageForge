@@ -86,26 +86,57 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
     switch (section.type) {
         case "hero":
             return (
-                <section className="py-24 sm:py-32 px-4 max-w-5xl mx-auto text-center relative overflow-hidden">
+                <section className="py-20 lg:py-28 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative overflow-hidden">
+                    {/* Glowing background blob decor */}
                     <div
-                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 rounded-full blur-3xl opacity-20 pointer-events-none"
+                        className="absolute right-0 top-1/4 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none"
                         style={{ backgroundColor: themeColor }}
                     />
-                    <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight max-w-4xl mx-auto">
-                        {section.title}
-                    </h1>
-                    <p className="text-lg sm:text-xl text-slate-400 max-w-2xl mx-auto mb-10 leading-relaxed">
-                        {section.subtitle}
-                    </p>
-                    {section.ctaText && (
-                        <a
-                            href={section.ctaLink || "#"}
-                            className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-white text-lg shadow-xl hover:opacity-90 transition-all"
-                            style={{ backgroundColor: themeColor }}
-                        >
-                            {section.ctaText}
-                            <ArrowRight className="w-5 h-5" />
-                        </a>
+
+                    {/* Left Column: Copy & Call-To-Action */}
+                    <div className="lg:col-span-7 text-left flex flex-col justify-center">
+                        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
+                            {section.title}
+                        </h1>
+                        <p className="text-base sm:text-lg text-slate-400 mb-8 leading-relaxed max-w-xl">
+                            {section.subtitle}
+                        </p>
+                        {section.ctaText && (
+                            <div>
+                                <a
+                                    href={section.ctaLink || "#"}
+                                    className="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-white text-base sm:text-lg shadow-xl hover:shadow-2xl hover:opacity-90 transition-all transform hover:-translate-y-0.5 active:translate-y-0"
+                                    style={{ backgroundColor: themeColor }}
+                                >
+                                    {section.ctaText}
+                                    <ArrowRight className="w-5 h-5" />
+                                </a>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Right Column: Premium Glowing Floating Image Mockup */}
+                    {section.imageUrl && (
+                        <div className="lg:col-span-5 flex justify-center lg:justify-end">
+                            <div className="relative group w-full max-w-md lg:max-w-none">
+                                {/* Ambient outer glow border */}
+                                <div
+                                    className="absolute -inset-1 rounded-[2.5rem] blur-xl opacity-35 group-hover:opacity-50 transition-opacity duration-500 pointer-events-none"
+                                    style={{ backgroundColor: themeColor }}
+                                />
+
+                                {/* Glassmorphic card frame */}
+                                <div className="relative bg-slate-900/80 p-3 sm:p-4 rounded-[2rem] border border-slate-700/50 shadow-2xl backdrop-blur overflow-hidden flex items-center justify-center">
+                                    {/* Unsplash Dynamic Hero Image */}
+                                    <img
+                                        src={section.imageUrl}
+                                        alt={section.title}
+                                        className="rounded-2xl w-full h-auto object-cover aspect-video sm:aspect-square lg:aspect-auto shadow-inner hover:scale-[1.01] transition-transform duration-500"
+                                        loading="eager"
+                                    />
+                                </div>
+                            </div>
+                        </div>
                     )}
                 </section>
             );
