@@ -43,6 +43,9 @@ export interface LandingPage {
     publishedUrl?: string;
     createdAt?: number;
     updatedAt?: number;
+    // New Analytics Fields
+    views?: number;
+    clicks?: number;
 }
 
 // ==========================================

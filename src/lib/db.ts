@@ -71,7 +71,7 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
             }
             return null;
         });
-        
+
         // Timeout after 1.5 seconds to prevent hanging
         const result = await Promise.race([
             getPromise,
@@ -199,12 +199,12 @@ export async function getUserLandingPages(userId: string): Promise<LandingPage[]
             if (isBrowser) {
                 const stored = localStorage.getItem("pageforge_local_pages");
                 const allPages: LandingPage[] = stored ? JSON.parse(stored) : [];
-                
+
                 // Merge local pages and fetched pages safely by ID
                 const mergedMap = new Map<string, LandingPage>();
                 for (const p of allPages) if (p.id) mergedMap.set(p.id, p);
                 for (const p of fetchedPages) if (p.id) mergedMap.set(p.id, p);
-                
+
                 const combined = Array.from(mergedMap.values());
                 localStorage.setItem("pageforge_local_pages", JSON.stringify(combined));
                 return combined.filter(p => p.userId === userId);
@@ -216,7 +216,7 @@ export async function getUserLandingPages(userId: string): Promise<LandingPage[]
             getPromise,
             new Promise<LandingPage[]>((resolve) => setTimeout(() => resolve(localPages), 1500))
         ]);
-        
+
         // Ensure that local pages are always combined with any fetched result
         const resultMap = new Map<string, LandingPage>();
         for (const p of localPages) if (p.id) resultMap.set(p.id, p);
@@ -277,5 +277,30 @@ export async function deleteLandingPage(pageId: string): Promise<void> {
         deleteDoc(docRef).catch((err) => {
             console.warn("Background Firestore delete failed:", err);
         });
+    }
+}
+
+/**
+ * Tracks an analytics event by incrementing the views or clicks count.
+ * Works seamlessly with both Firestore and the LocalStorage fallback.
+ */
+export async function trackAnalyticsEvent(pageId: string, eventType: "view" | "click"): Promise<void> {
+    try {
+        const page = await getLandingPageById(pageId);
+        if (!page) return;
+
+        const currentViews = page.views || 0;
+        const currentClicks = page.clicks || 0;
+
+        const updates: Partial<LandingPage> = {};
+        if (eventType === "view") {
+            updates.views = currentViews + 1;
+        } else if (eventType === "click") {
+            updates.clicks = currentClicks + 1;
+        }
+
+        await updateLandingPage(pageId, updates);
+    } catch (error) {
+        console.error(`Failed to track ${eventType} event for page ${pageId}:`, error);
     }
 }
