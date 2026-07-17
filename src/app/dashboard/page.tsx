@@ -277,9 +277,27 @@ export default function DashboardPage() {
 
                                 <div>
                                     <div className="flex items-center justify-between mb-3">
-                                        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-slate-800 text-slate-300 border border-slate-700/60">
-                                            {page.isPublished ? "Published" : "Draft"}
-                                        </span>
+                                        <div className="flex items-center gap-2">
+                                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${page.isPublished
+                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                    : "bg-slate-800 text-slate-400 border-slate-700/60"
+                                                }`}>
+                                                {page.isPublished ? "Published" : "Draft"}
+                                            </span>
+                                            {page.isPublished && (
+                                                <button
+                                                    onClick={() => {
+                                                        const publicUrl = window.location.origin + "/page/" + page.id;
+                                                        navigator.clipboard.writeText(publicUrl);
+                                                        alert("Public page link copied to clipboard!");
+                                                    }}
+                                                    className="text-[10px] text-slate-400 hover:text-white underline font-semibold transition-colors"
+                                                    title="Copy Public Link"
+                                                >
+                                                    Copy Link
+                                                </button>
+                                            )}
+                                        </div>
                                         <span
                                             className="w-3 h-3 rounded-full shadow-sm"
                                             style={{ backgroundColor: page.themeColor || "#6366f1" }}

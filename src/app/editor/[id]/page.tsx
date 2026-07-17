@@ -9,6 +9,7 @@ import {
     Copy, Plus, Save, Monitor, Smartphone, Loader2, Edit3, Check
 } from "lucide-react";
 import Link from "next/link";
+import { exportPageToHTML } from "@/lib/exporter";
 
 export default function VisualEditorPage() {
     const params = useParams();
@@ -247,8 +248,8 @@ export default function VisualEditorPage() {
                                     key={section.id}
                                     onClick={() => setSelectedSectionId(section.id)}
                                     className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${selectedSectionId === section.id
-                                            ? "bg-indigo-600/10 border-indigo-500 text-white"
-                                            : "bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300"
+                                        ? "bg-indigo-600/10 border-indigo-500 text-white"
+                                        : "bg-slate-950/40 border-slate-800 hover:border-slate-700 text-slate-300"
                                         }`}
                                 >
                                     <div className="flex items-center gap-2">
@@ -380,22 +381,64 @@ export default function VisualEditorPage() {
                         )}
                     </div>
 
-                    {/* Global Page Styling */}
-                    <div className="p-5 border-t border-slate-800 bg-slate-950/40">
-                        <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Global Page Theme Color</label>
-                        <div className="flex items-center gap-3">
-                            <input
-                                type="color"
-                                value={globalThemeColor}
-                                onChange={(e) => setGlobalThemeColor(e.target.value)}
-                                className="w-8 h-8 rounded-lg border border-slate-700 bg-transparent cursor-pointer"
-                            />
-                            <input
-                                type="text"
-                                value={globalThemeColor}
-                                onChange={(e) => setGlobalThemeColor(e.target.value)}
-                                className="flex-1 p-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono focus:outline-none"
-                            />
+
+                    {/* Global Page Settings, Publishing & Exporting */}
+                    <div className="p-5 border-t border-slate-800 bg-slate-950/40 space-y-5">
+
+                        {/* Theme Customizer */}
+                        <div>
+                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Global Page Theme Color</label>
+                            <div className="flex items-center gap-3">
+                                <input
+                                    type="color"
+                                    value={globalThemeColor}
+                                    onChange={(e) => setGlobalThemeColor(e.target.value)}
+                                    className="w-8 h-8 rounded-lg border border-slate-700 bg-transparent cursor-pointer"
+                                />
+                                <input
+                                    type="text"
+                                    value={globalThemeColor}
+                                    onChange={(e) => setGlobalThemeColor(e.target.value)}
+                                    className="flex-1 p-2 rounded-lg bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono focus:outline-none"
+                                />
+                            </div>
+                        </div>
+
+                        {/* Public / Draft Toggle */}
+                        <div className="pt-4 border-t border-slate-800/80">
+                            <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Publishing Status</label>
+                            <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
+                                <span className="text-xs text-slate-300 font-semibold">
+                                    {page.isPublished ? "🟢 Live Public Site" : "⚪ Private Draft"}
+                                </span>
+                                <button
+                                    onClick={() => setPage({ ...page, isPublished: !page.isPublished })}
+                                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${page.isPublished
+                                            ? "bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30"
+                                            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                        }`}
+                                >
+                                    {page.isPublished ? "Make Draft" : "Go Live"}
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Standalone HTML Export */}
+                        <div className="pt-1">
+                            <button
+                                onClick={() => {
+                                    const compiledHTML = exportPageToHTML(page);
+                                    const blob = new Blob([compiledHTML], { type: "text/html" });
+                                    const link = document.createElement("a");
+                                    link.href = URL.createObjectURL(blob);
+                                    link.download = `${page.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-landing-page.html`;
+                                    link.click();
+                                }}
+                                className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-slate-700/60 flex items-center justify-center gap-2"
+                            >
+                                <Save className="w-4 h-4 text-indigo-400" />
+                                Export Standalone HTML
+                            </button>
                         </div>
                     </div>
                 </aside>
@@ -404,8 +447,8 @@ export default function VisualEditorPage() {
                 <main className="flex-1 bg-slate-950 p-6 sm:p-10 flex justify-center items-start overflow-y-auto">
                     <div
                         className={`transition-all duration-300 w-full ${isPreviewMobile
-                                ? "max-w-[375px] border-[12px] border-slate-900 rounded-[2.5rem] shadow-2xl h-[700px] overflow-y-auto bg-slate-950 relative"
-                                : "max-w-5xl"
+                            ? "max-w-[375px] border-[12px] border-slate-900 rounded-[2.5rem] shadow-2xl h-[700px] overflow-y-auto bg-slate-950 relative"
+                            : "max-w-5xl"
                             }`}
                     >
                         {/* Simulation Screen Info */}
@@ -423,8 +466,8 @@ export default function VisualEditorPage() {
                                     key={section.id}
                                     onClick={() => setSelectedSectionId(section.id)}
                                     className={`relative rounded-3xl border transition-all ${selectedSectionId === section.id
-                                            ? "border-indigo-500 shadow-lg ring-1 ring-indigo-500 bg-slate-900/10"
-                                            : "border-transparent hover:border-slate-800"
+                                        ? "border-indigo-500 shadow-lg ring-1 ring-indigo-500 bg-slate-900/10"
+                                        : "border-transparent hover:border-slate-800"
                                         }`}
                                 >
                                     {/* Action Selector Indicator overlay */}
