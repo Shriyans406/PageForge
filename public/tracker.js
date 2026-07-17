@@ -15,6 +15,28 @@
     const API_URL = "/api/track";
 
     function sendEvent(eventType) {
+        // 1. Fallback tracking: Update LocalStorage directly (so it works on localhost testing without Firebase)
+        try {
+            const stored = localStorage.getItem("pageforge_local_pages");
+            if (stored) {
+                let pages = JSON.parse(stored);
+                pages = pages.map(p => {
+                    if (p.id === pageId) {
+                        return {
+                            ...p,
+                            views: eventType === 'view' ? (p.views || 0) + 1 : (p.views || 0),
+                            clicks: eventType === 'click' ? (p.clicks || 0) + 1 : (p.clicks || 0)
+                        };
+                    }
+                    return p;
+                });
+                localStorage.setItem("pageforge_local_pages", JSON.stringify(pages));
+            }
+        } catch (err) {
+            console.error("PageForge Tracker: Local tracking failed", err);
+        }
+
+        // 2. Production tracking: Send event to the API route (for Firestore/backend)
         fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
