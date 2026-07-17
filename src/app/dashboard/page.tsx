@@ -327,8 +327,8 @@ export default function DashboardPage() {
                                         <div className="text-center">
                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Conv. Rate</p>
                                             <p className="text-sm font-extrabold text-indigo-400">
-                                                {page.views && page.views > 0
-                                                    ? Math.round(((page.clicks || 0) / page.views) * 100)
+                                                {page.views && page.views > 0 
+                                                    ? Math.round(((page.clicks || 0) / page.views) * 100) 
                                                     : 0}%
                                             </p>
                                         </div>
@@ -340,37 +340,38 @@ export default function DashboardPage() {
                                             {page.sections.length} Section(s)
                                         </span>
 
-                                        <div className="flex items-center gap-2">
-                                            <Link
-                                                href={`/editor/${page.id}`}
-                                                className="px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/50"
-                                                title="Open Visual Builder"
-                                            >
-                                                Edit Page
-                                            </Link>
-                                            <Link
-                                                href={`/page/${page.id}`}
-                                                target="_blank"
-                                                className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
-                                                title="View Live Preview"
-                                            >
-                                                View Page
-                                                <ExternalLink className="w-3.5 h-3.5" />
-                                            </Link>
-                                            <button
-                                                onClick={() => handleDeletePage(page.id!)}
-                                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                                title="Delete Page"
-                                            >
-                                                <Trash2 className="w-4 h-4" />
-                                            </button>
-                                        </div>
+                                    <div className="flex items-center gap-2">
+                                        <Link
+                                            href={`/editor/${page.id}`}
+                                            className="px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/50"
+                                            title="Open Visual Builder"
+                                        >
+                                            Edit Page
+                                        </Link>
+                                        <Link
+                                            href={`/page/${page.id}`}
+                                            target="_blank"
+                                            className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                            title="View Live Preview"
+                                        >
+                                            View Page
+                                            <ExternalLink className="w-3.5 h-3.5" />
+                                        </Link>
+                                        <button
+                                            onClick={() => handleDeletePage(page.id!)}
+                                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                            title="Delete Page"
+                                        >
+                                            <Trash2 className="w-4 h-4" />
+                                        </button>
                                     </div>
                                 </div>
-                        ))}
+                                </div>
                             </div>
-                        )}
-                    </main>
+                        ))}
+                    </div>
+                )}
+            </main>
         </div>
     );
 }
