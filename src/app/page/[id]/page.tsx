@@ -7,6 +7,8 @@ import { LandingPage, PageSection } from "@/types";
 import { Sparkles, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
+import Script from "next/script";
+
 export default function LiveLandingPageViewer() {
     const params = useParams();
     const pageId = params?.id as string;
@@ -77,6 +79,15 @@ export default function LiveLandingPageViewer() {
                 <p className="font-semibold text-slate-400 mb-1">{page.title}</p>
                 <p>&copy; {new Date().getFullYear()} All rights reserved. Created effortlessly with PageForge AI.</p>
             </footer>
+
+            {/* PageForge Analytics Tracker (Only run on published pages) */}
+            {page.isPublished && (
+                <Script 
+                    src="/tracker.js" 
+                    strategy="afterInteractive" 
+                    data-page-id={page.id} 
+                />
+            )}
         </div>
     );
 }

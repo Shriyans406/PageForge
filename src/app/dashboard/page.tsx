@@ -279,8 +279,8 @@ export default function DashboardPage() {
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
                                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${page.isPublished
-                                                    ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
-                                                    : "bg-slate-800 text-slate-400 border-slate-700/60"
+                                                ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/20"
+                                                : "bg-slate-800 text-slate-400 border-slate-700/60"
                                                 }`}>
                                                 {page.isPublished ? "Published" : "Draft"}
                                             </span>
@@ -313,42 +313,64 @@ export default function DashboardPage() {
                                     </p>
                                 </div>
 
-                                <div className="pt-4 border-t border-slate-800/80 flex items-center justify-between">
-                                    <span className="text-xs text-slate-400 font-medium">
-                                        {page.sections.length} Section(s)
-                                    </span>
+                                <div className="pt-4 border-t border-slate-800/80 flex flex-col gap-4">
+                                    {/* Analytics Metrics */}
+                                    <div className="flex items-center justify-between px-1">
+                                        <div className="text-center">
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Views</p>
+                                            <p className="text-sm font-extrabold text-slate-200">{page.views || 0}</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Clicks</p>
+                                            <p className="text-sm font-extrabold text-slate-200">{page.clicks || 0}</p>
+                                        </div>
+                                        <div className="text-center">
+                                            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Conv. Rate</p>
+                                            <p className="text-sm font-extrabold text-indigo-400">
+                                                {page.views && page.views > 0
+                                                    ? Math.round(((page.clicks || 0) / page.views) * 100)
+                                                    : 0}%
+                                            </p>
+                                        </div>
+                                    </div>
 
-                                    <div className="flex items-center gap-2">
-                                        <Link
-                                            href={`/editor/${page.id}`}
-                                            className="px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/50"
-                                            title="Open Visual Builder"
-                                        >
-                                            Edit Page
-                                        </Link>
-                                        <Link
-                                            href={`/page/${page.id}`}
-                                            target="_blank"
-                                            className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
-                                            title="View Live Preview"
-                                        >
-                                            View Page
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                        </Link>
-                                        <button
-                                            onClick={() => handleDeletePage(page.id!)}
-                                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                            title="Delete Page"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                    {/* Actions */}
+                                    <div className="flex items-center justify-between pt-2">
+                                        <span className="text-xs text-slate-500 font-medium">
+                                            {page.sections.length} Section(s)
+                                        </span>
+
+                                        <div className="flex items-center gap-2">
+                                            <Link
+                                                href={`/editor/${page.id}`}
+                                                className="px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/50"
+                                                title="Open Visual Builder"
+                                            >
+                                                Edit Page
+                                            </Link>
+                                            <Link
+                                                href={`/page/${page.id}`}
+                                                target="_blank"
+                                                className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                                title="View Live Preview"
+                                            >
+                                                View Page
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                            </Link>
+                                            <button
+                                                onClick={() => handleDeletePage(page.id!)}
+                                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                title="Delete Page"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
                         ))}
-                    </div>
-                )}
-            </main>
+                            </div>
+                        )}
+                    </main>
         </div>
     );
 }
