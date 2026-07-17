@@ -302,6 +302,13 @@ export default function DashboardPage() {
 
                                     <div className="flex items-center gap-2">
                                         <Link
+                                            href={`/editor/${page.id}`}
+                                            className="px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/50"
+                                            title="Open Visual Builder"
+                                        >
+                                            Edit Page
+                                        </Link>
+                                        <Link
                                             href={`/page/${page.id}`}
                                             target="_blank"
                                             className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"

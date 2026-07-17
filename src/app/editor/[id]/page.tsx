@@ -444,3 +444,120 @@ export default function VisualEditorPage() {
         </div>
     );
 }
+
+// ==========================================
+// RENDER SANBOX SECTION PREVIEWER
+// ==========================================
+
+function SectionPreviewer({ section, themeColor }: { section: PageSection; themeColor: string }) {
+    switch (section.type) {
+        case "hero":
+            return (
+                <section className="py-12 sm:py-16 px-4 text-center relative overflow-hidden">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none" style={{ backgroundColor: themeColor }} />
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-4xl mx-auto text-left">
+                        <div className="lg:col-span-7">
+                            <h1 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight mb-4">{section.title}</h1>
+                            <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6">{section.subtitle}</p>
+                            {section.ctaText && (
+                                <button className="px-5 py-2.5 rounded-xl text-xs font-bold text-white shadow-md" style={{ backgroundColor: themeColor }}>
+                                    {section.ctaText}
+                                </button>
+                            )}
+                        </div>
+                        {section.imageUrl && (
+                            <div className="lg:col-span-5 flex justify-center">
+                                <div className="p-2 rounded-2xl bg-slate-900/60 border border-slate-800 shadow-lg">
+                                    <img src={section.imageUrl} alt="Hero View" className="rounded-xl w-full h-auto object-cover max-h-[160px]" />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </section>
+            );
+
+        case "features":
+            return (
+                <section className="py-10 px-4 border-t border-slate-900 max-w-4xl mx-auto">
+                    <h2 className="text-xl font-bold text-center text-white mb-2">{section.title}</h2>
+                    {section.subtitle && <p className="text-slate-400 text-xs text-center mb-8">{section.subtitle}</p>}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {Array.isArray(section.content) && section.content.map((item: any, idx: number) => (
+                            <div key={idx} className="p-5 rounded-2xl bg-slate-900/30 border border-slate-800 text-left">
+                                <div className="w-8 h-8 rounded-lg flex items-center justify-center mb-4 text-xs font-bold" style={{ backgroundColor: `${themeColor}33`, color: themeColor }}>
+                                    {idx + 1}
+                                </div>
+                                <h3 className="text-sm font-bold text-white mb-2">{item.title}</h3>
+                                <p className="text-xs text-slate-400 leading-relaxed">{item.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            );
+
+        case "pricing":
+            return (
+                <section className="py-10 px-4 border-t border-slate-900 max-w-4xl mx-auto">
+                    <h2 className="text-xl font-bold text-center text-white mb-2">{section.title}</h2>
+                    {section.subtitle && <p className="text-slate-400 text-xs text-center mb-8">{section.subtitle}</p>}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                        {Array.isArray(section.content) && section.content.map((plan: any, idx: number) => (
+                            <div key={idx} className={`p-6 rounded-2xl border flex flex-col justify-between ${idx === 1 ? "bg-slate-900/60 border-indigo-500/50" : "bg-slate-900/20 border-slate-850"}`}>
+                                <div>
+                                    <h3 className="text-sm font-bold text-white mb-2">{plan.plan}</h3>
+                                    <div className="flex items-baseline gap-1 mb-4">
+                                        <span className="text-2xl font-extrabold text-white">{plan.price}</span>
+                                        <span className="text-[10px] text-slate-400">{plan.period}</span>
+                                    </div>
+                                    <ul className="space-y-2 mb-6">
+                                        {Array.isArray(plan.features) && plan.features.map((feat: string, fIdx: number) => (
+                                            <li key={fIdx} className="text-xs text-slate-300 flex items-center gap-1.5">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                                                {feat}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </div>
+                                <button className="w-full py-2.5 rounded-xl font-bold text-xs" style={idx === 1 ? { backgroundColor: themeColor, color: "white" } : { backgroundColor: "#1e293b", color: "#e2e8f0" }}>
+                                    {plan.ctaText}
+                                </button>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            );
+
+        case "faq":
+            return (
+                <section className="py-10 px-4 border-t border-slate-900 max-w-3xl mx-auto">
+                    <h2 className="text-xl font-bold text-center text-white mb-8">{section.title}</h2>
+                    <div className="space-y-3 text-left">
+                        {Array.isArray(section.content) && section.content.map((faq: any, idx: number) => (
+                            <div key={idx} className="p-5 rounded-xl bg-slate-900/30 border border-slate-850">
+                                <h3 className="text-xs font-bold text-white mb-1.5">{faq.question}</h3>
+                                <p className="text-xs text-slate-400 leading-relaxed">{faq.answer}</p>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            );
+
+        case "cta":
+            return (
+                <section className="py-10 px-6 my-6 text-center rounded-2xl border border-slate-850 bg-gradient-to-b from-slate-900 to-slate-950 max-w-4xl mx-auto relative overflow-hidden">
+                    <div className="absolute inset-0 opacity-5 blur-xl pointer-events-none" style={{ backgroundColor: themeColor }} />
+                    <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 max-w-xl mx-auto">{section.title}</h2>
+                    {section.subtitle && <p className="text-slate-400 text-xs mb-6">{section.subtitle}</p>}
+                    {section.ctaText && (
+                        <button className="px-6 py-3 rounded-xl text-xs font-bold text-white shadow-md" style={{ backgroundColor: themeColor }}>
+                            {section.ctaText}
+                        </button>
+                    )}
+                </section>
+            );
+
+        default:
+            return null;
+    }
+}
+
