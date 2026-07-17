@@ -80,7 +80,8 @@ export default function VisualEditorPage() {
                 sections: page.sections,
                 themeColor: globalThemeColor,
                 title: page.title,
-                description: page.description
+                description: page.description,
+                isPublished: page.isPublished
             });
             setSaveSuccess(true);
             setTimeout(() => setSaveSuccess(false), 3000);
