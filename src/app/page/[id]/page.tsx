@@ -54,16 +54,18 @@ export default function LiveLandingPageViewer() {
     return (
         <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-indigo-500 selection:text-white">
 
-            {/* Top Preview Banner */}
-            <div className="bg-slate-900/80 border-b border-slate-800 px-4 py-2.5 text-xs text-slate-400 flex items-center justify-between sticky top-0 z-50 backdrop-blur">
-                <div className="flex items-center gap-2">
-                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
-                    <span>PageForge Preview — <strong className="text-white">{page.title}</strong></span>
+            {/* Top Preview Banner — Only visible in draft/preview mode */}
+            {!page.isPublished && (
+                <div className="bg-slate-900/80 border-b border-slate-800 px-4 py-2.5 text-xs text-slate-400 flex items-center justify-between sticky top-0 z-50 backdrop-blur">
+                    <div className="flex items-center gap-2">
+                        <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                        <span>PageForge Preview — <strong className="text-white">{page.title}</strong></span>
+                    </div>
+                    <Link href="/dashboard" className="hover:text-white underline font-medium">
+                        Back to Dashboard →
+                    </Link>
                 </div>
-                <Link href="/dashboard" className="hover:text-white underline font-medium">
-                    Back to Dashboard →
-                </Link>
-            </div>
+            )}
 
             {/* Render Each AI-Generated Section */}
             {page.sections.map((section: PageSection) => (
