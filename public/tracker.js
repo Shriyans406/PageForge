@@ -1,32 +1,37 @@
 /**
- * PageForge Analytics Tracker
- * Automatically tracks page views and button clicks.
+ * PageForge Analytics & A/B Test Tracker
  */
 (function () {
-    // Extract the pageId from the script tag's data attribute
     const scriptTag = document.currentScript;
     const pageId = scriptTag ? scriptTag.getAttribute("data-page-id") : null;
+    const variant = scriptTag ? scriptTag.getAttribute("data-variant") || "A" : "A";
 
-    if (!pageId) {
-        console.warn("PageForge Tracker: Missing data-page-id attribute.");
-        return;
-    }
-
-    const API_URL = "/api/track";
+    if (!pageId) return;
 
     function sendEvent(eventType) {
-        // 1. Fallback tracking: Update LocalStorage directly (so it works on localhost testing without Firebase)
+        // Fallback tracking: Update LocalStorage directly for localhost
         try {
             const stored = localStorage.getItem("pageforge_local_pages");
             if (stored) {
                 let pages = JSON.parse(stored);
                 pages = pages.map(p => {
                     if (p.id === pageId) {
-                        return {
-                            ...p,
-                            views: eventType === 'view' ? (p.views || 0) + 1 : (p.views || 0),
-                            clicks: eventType === 'click' ? (p.clicks || 0) + 1 : (p.clicks || 0)
-                        };
+                        const updates = { ...p };
+
+                        // Global stats
+                        if (eventType === 'view') updates.views = (p.views || 0) + 1;
+                        if (eventType === 'click') updates.clicks = (p.clicks || 0) + 1;
+
+                        // Variant specific stats
+                        if (variant === "A") {
+                            if (eventType === 'view') updates.viewsA = (p.viewsA || 0) + 1;
+                            if (eventType === 'click') updates.clicksA = (p.clicksA || 0) + 1;
+                        } else if (variant === "B") {
+                            if (eventType === 'view') updates.viewsB = (p.viewsB || 0) + 1;
+                            if (eventType === 'click') updates.clicksB = (p.clicksB || 0) + 1;
+                        }
+
+                        return updates;
                     }
                     return p;
                 });
@@ -36,25 +41,19 @@
             console.error("PageForge Tracker: Local tracking failed", err);
         }
 
-        // 2. Production tracking: Send event to the API route (for Firestore/backend)
-        fetch(API_URL, {
+        // Production tracking (Server API)
+        fetch("/api/track", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ pageId: pageId, eventType: eventType }),
-            // Use keepalive so requests succeed even if the user navigates away
+            body: JSON.stringify({ pageId, eventType, variant }),
             keepalive: true
-        }).catch(err => console.error("PageForge Tracker Error:", err));
+        }).catch(() => { });
     }
 
-    // 1. Track Page View on load
-    window.addEventListener("load", () => {
-        sendEvent("view");
-    });
+    window.addEventListener("load", () => sendEvent("view"));
 
-    // 2. Track Clicks (Conversations) on CTAs and Buttons
     document.addEventListener("click", (e) => {
-        const target = e.target.closest("a, button");
-        if (target) {
+        if (e.target.closest("a, button")) {
             sendEvent("click");
         }
     });
