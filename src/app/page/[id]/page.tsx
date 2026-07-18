@@ -14,6 +14,7 @@ export default function LiveLandingPageViewer() {
     const pageId = params?.id as string;
 
     const [page, setPage] = useState<LandingPage | null>(null);
+    const [activeVariant, setActiveVariant] = useState<"A" | "B">("A");
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
@@ -21,6 +22,9 @@ export default function LiveLandingPageViewer() {
             if (!pageId) return;
             try {
                 const fetchedPage = await getLandingPageById(pageId);
+                if (fetchedPage && fetchedPage.abTestEnabled && fetchedPage.variantBHeadline) {
+                    setActiveVariant(Math.random() > 0.5 ? "B" : "A");
+                }
                 setPage(fetchedPage);
             } catch (error) {
                 console.error("Error loading live page:", error);
@@ -70,9 +74,17 @@ export default function LiveLandingPageViewer() {
             )}
 
             {/* Render Each AI-Generated Section */}
-            {page.sections.map((section: PageSection) => (
-                <SectionRenderer key={section.id} section={section} themeColor={themeColor} />
-            ))}
+            {page.sections.map((section: PageSection) => {
+                // Swap the headline if it's the hero section and Variant B is active
+                const displaySection = { ...section };
+                if (displaySection.type === "hero" && activeVariant === "B" && page.variantBHeadline) {
+                    displaySection.title = page.variantBHeadline;
+                }
+
+                return (
+                    <SectionRenderer key={displaySection.id} section={displaySection} themeColor={themeColor} />
+                );
+            })}
 
             {/* Footer */}
             <footer className="border-t border-slate-900 py-12 text-center text-xs text-slate-500 bg-slate-950/50">
@@ -86,6 +98,7 @@ export default function LiveLandingPageViewer() {
                     src="/tracker.js" 
                     strategy="afterInteractive" 
                     data-page-id={page.id} 
+                    data-variant={activeVariant}
                 />
             )}
         </div>
