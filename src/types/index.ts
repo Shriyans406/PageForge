@@ -46,6 +46,14 @@ export interface LandingPage {
     // New Analytics Fields
     views?: number;
     clicks?: number;
+    abTestEnabled?: boolean;
+    variantBHeadline?: string;
+
+    viewsA?: number;
+    clicksA?: number;
+
+    viewsB?: number;
+    clicksB?: number;
 }
 
 // ==========================================

@@ -415,14 +415,38 @@ export default function VisualEditorPage() {
                                 <button
                                     onClick={() => setPage({ ...page, isPublished: !page.isPublished })}
                                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${page.isPublished
-                                            ? "bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30"
-                                            : "bg-slate-800 text-slate-300 hover:bg-slate-700"
+                                        ? "bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600/30"
+                                        : "bg-slate-800 text-slate-300 hover:bg-slate-700"
                                         }`}
                                 >
                                     {page.isPublished ? "Make Draft" : "Go Live"}
                                 </button>
                             </div>
                         </div>
+
+                        {/* A/B Testing Toggle */}
+                        <div className="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700/50 mb-4">
+                            <label className="text-sm font-semibold text-slate-300">A/B Testing</label>
+                            <button
+                                onClick={() => setPage({ ...page, abTestEnabled: !page.abTestEnabled })}
+                                className={`w-11 h-6 rounded-full transition-colors relative ${page.abTestEnabled ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                            >
+                                <span className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white transition-all ${page.abTestEnabled ? 'left-6' : 'left-1'}`} />
+                            </button>
+                        </div>
+
+                        {page.abTestEnabled && (
+                            <div className="flex items-center gap-3 bg-indigo-500/10 px-4 py-3 rounded-xl border border-indigo-500/30 mb-4 w-full">
+                                <label className="text-sm font-bold text-indigo-300 whitespace-nowrap">Variant B Headline:</label>
+                                <input 
+                                    type="text"
+                                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
+                                    placeholder="Enter an alternative headline..."
+                                    value={page.variantBHeadline || ""}
+                                    onChange={(e) => setPage({ ...page, variantBHeadline: e.target.value })}
+                                />
+                            </div>
+                        )}
 
                         {/* Standalone HTML Export */}
                         <div className="pt-1">
