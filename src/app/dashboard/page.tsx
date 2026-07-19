@@ -334,6 +334,27 @@ export default function DashboardPage() {
                                         </div>
                                     </div>
 
+                                    {page.abTestEnabled && (
+                                        <div className="mt-2 p-3 bg-indigo-950/30 border border-indigo-500/20 rounded-xl flex flex-col gap-2">
+                                            <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider text-center">A/B Test Results</p>
+                                            <div className="flex items-center justify-between">
+                                                <div className="text-center">
+                                                    <p className="text-[10px] text-slate-400 mb-1">Variant A</p>
+                                                    <p className="text-xs font-bold text-slate-200">
+                                                        {page.viewsA && page.viewsA > 0 ? Math.round(((page.clicksA || 0) / page.viewsA) * 100) : 0}% Conv.
+                                                    </p>
+                                                </div>
+                                                <div className="w-px h-6 bg-slate-700/50"></div>
+                                                <div className="text-center">
+                                                    <p className="text-[10px] text-slate-400 mb-1">Variant B</p>
+                                                    <p className="text-xs font-bold text-slate-200">
+                                                        {page.viewsB && page.viewsB > 0 ? Math.round(((page.clicksB || 0) / page.viewsB) * 100) : 0}% Conv.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Actions */}
                                     <div className="flex items-center justify-between pt-2">
                                         <span className="text-xs text-slate-500 font-medium">
