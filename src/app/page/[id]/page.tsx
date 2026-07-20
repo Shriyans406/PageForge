@@ -112,7 +112,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
     switch (section.type) {
         case "hero":
             return (
-                <section className="py-20 lg:py-28 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative overflow-hidden">
+                <section id="hero" className="py-20 lg:py-28 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative overflow-hidden">
                     {/* Glowing background blob decor */}
                     <div
                         className="absolute right-0 top-1/4 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none"
@@ -169,7 +169,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "features":
             return (
-                <section className="py-20 px-4 max-w-7xl mx-auto border-t border-slate-900">
+                <section id="features" className="py-20 px-4 max-w-7xl mx-auto border-t border-slate-900">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">{section.title}</h2>
                         {section.subtitle && <p className="text-slate-400 text-lg">{section.subtitle}</p>}
@@ -194,7 +194,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "pricing":
             return (
-                <section className="py-20 px-4 max-w-6xl mx-auto border-t border-slate-900">
+                <section id="pricing" className="py-20 px-4 max-w-6xl mx-auto border-t border-slate-900">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">{section.title}</h2>
                         {section.subtitle && <p className="text-slate-400 text-lg">{section.subtitle}</p>}
@@ -243,7 +243,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "faq":
             return (
-                <section className="py-20 px-4 max-w-4xl mx-auto border-t border-slate-900">
+                <section id="faq" className="py-20 px-4 max-w-4xl mx-auto border-t border-slate-900">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">{section.title}</h2>
                         {section.subtitle && <p className="text-slate-400 text-lg">{section.subtitle}</p>}
@@ -267,7 +267,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "cta":
             return (
-                <section className="py-20 px-4 max-w-5xl mx-auto my-12 text-center rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-900/40 p-12 relative overflow-hidden">
+                <section id="cta" className="py-20 px-4 max-w-5xl mx-auto my-12 text-center rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-900/40 p-12 relative overflow-hidden">
                     <div
                         className="absolute inset-0 opacity-10 blur-3xl pointer-events-none"
                         style={{ backgroundColor: themeColor }}

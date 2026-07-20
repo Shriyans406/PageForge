@@ -39,6 +39,7 @@ export async function searchUnsplashImage(query: string): Promise<string> {
             headers: {
                 Authorization: `Client-ID ${accessKey}`
             },
+            signal: AbortSignal.timeout(4000), // Timeout after 4 seconds
             next: { revalidate: 86400 } // Cache results for 24h
         });
 

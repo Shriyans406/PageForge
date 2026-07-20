@@ -19,11 +19,8 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <body className={inter.className}>
-          <Toaster position="bottom-right" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
-          {children}
-        </body>
         <AuthProvider>
+          <Toaster position="bottom-right" toastOptions={{ style: { background: '#1e293b', color: '#fff' } }} />
           {children}
         </AuthProvider>
       </body>
