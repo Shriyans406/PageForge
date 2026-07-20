@@ -11,6 +11,8 @@ import {
 import Link from "next/link";
 import { exportPageToHTML } from "@/lib/exporter";
 
+import toast from "react-hot-toast";
+
 export default function VisualEditorPage() {
     const params = useParams();
     const router = useRouter();
@@ -83,11 +85,11 @@ export default function VisualEditorPage() {
                 description: page.description,
                 isPublished: page.isPublished
             });
-            setSaveSuccess(true);
-            setTimeout(() => setSaveSuccess(false), 3000);
+            toast.success("Page layout saved successfully!");
         } catch (err) {
             console.error("Error saving layout updates:", err);
             alert("Failed to save changes. Please try again.");
+            toast.error("Failed to save changes.");
         } finally {
             setSaving(false);
         }
@@ -438,7 +440,7 @@ export default function VisualEditorPage() {
                         {page.abTestEnabled && (
                             <div className="flex items-center gap-3 bg-indigo-500/10 px-4 py-3 rounded-xl border border-indigo-500/30 mb-4 w-full">
                                 <label className="text-sm font-bold text-indigo-300 whitespace-nowrap">Variant B Headline:</label>
-                                <input 
+                                <input
                                     type="text"
                                     className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
                                     placeholder="Enter an alternative headline..."
