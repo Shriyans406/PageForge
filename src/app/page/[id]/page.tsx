@@ -58,7 +58,7 @@ export default function LiveLandingPageViewer() {
     const themeColor = page.themeColor || "#6366f1";
 
     return (
-        <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-indigo-500 selection:text-white">
+        <div className="min-h-screen bg-slate-950 text-white font-sans selection:bg-indigo-500 selection:text-white scroll-smooth">
 
             {/* Top Preview Banner — Only visible in draft/preview mode */}
             {!page.isPublished && (

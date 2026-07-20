@@ -8,6 +8,9 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Sparkles, Plus, Trash2, ExternalLink, Loader2, Wand2, FileText } from "lucide-react";
 
+import confetti from "canvas-confetti";
+import toast from "react-hot-toast";
+
 export default function DashboardPage() {
     const { user, loading: authLoading } = useAuth();
     const router = useRouter();
@@ -116,6 +119,15 @@ export default function DashboardPage() {
             const userPages = await getUserLandingPages(user.uid);
             setPages(userPages);
             setPromptText("");
+
+            // Phase 8: Celebration Polish!
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#6366f1', '#8b5cf6', '#ec4899', '#ffffff']
+            });
+            toast.success("AI successfully built your page!");
         } catch (error: any) {
             console.error("Error generating AI page:", error);
             setErrorMessage(error.message || "Error generating page with Gemini.");
@@ -327,8 +339,8 @@ export default function DashboardPage() {
                                         <div className="text-center">
                                             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-1">Conv. Rate</p>
                                             <p className="text-sm font-extrabold text-indigo-400">
-                                                {page.views && page.views > 0 
-                                                    ? Math.round(((page.clicks || 0) / page.views) * 100) 
+                                                {page.views && page.views > 0
+                                                    ? Math.round(((page.clicks || 0) / page.views) * 100)
                                                     : 0}%
                                             </p>
                                         </div>
@@ -361,32 +373,32 @@ export default function DashboardPage() {
                                             {page.sections.length} Section(s)
                                         </span>
 
-                                    <div className="flex items-center gap-2">
-                                        <Link
-                                            href={`/editor/${page.id}`}
-                                            className="px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/50"
-                                            title="Open Visual Builder"
-                                        >
-                                            Edit Page
-                                        </Link>
-                                        <Link
-                                            href={`/page/${page.id}`}
-                                            target="_blank"
-                                            className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
-                                            title="View Live Preview"
-                                        >
-                                            View Page
-                                            <ExternalLink className="w-3.5 h-3.5" />
-                                        </Link>
-                                        <button
-                                            onClick={() => handleDeletePage(page.id!)}
-                                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
-                                            title="Delete Page"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <Link
+                                                href={`/editor/${page.id}`}
+                                                className="px-3 py-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-200 text-xs font-semibold transition-colors flex items-center gap-1.5 border border-slate-700/50"
+                                                title="Open Visual Builder"
+                                            >
+                                                Edit Page
+                                            </Link>
+                                            <Link
+                                                href={`/page/${page.id}`}
+                                                target="_blank"
+                                                className="px-3 py-1.5 rounded-lg bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-semibold transition-colors flex items-center gap-1.5"
+                                                title="View Live Preview"
+                                            >
+                                                View Page
+                                                <ExternalLink className="w-3.5 h-3.5" />
+                                            </Link>
+                                            <button
+                                                onClick={() => handleDeletePage(page.id!)}
+                                                className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                                                title="Delete Page"
+                                            >
+                                                <Trash2 className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
-                                </div>
                                 </div>
                             </div>
                         ))}
