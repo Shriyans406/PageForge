@@ -188,7 +188,7 @@ export default function DashboardPage() {
                     <div className="max-w-3xl">
                         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-indigo-500/30 bg-indigo-500/10 text-indigo-300 text-xs font-semibold mb-4">
                             <Wand2 className="w-3.5 h-3.5 animate-pulse" />
-                            Phase 2: Gemini AI Generator
+                            Gemini AI Generator
                         </div>
                         <h1 className="text-3xl font-extrabold text-white tracking-tight mb-2">
                             Describe Your Idea, Let AI Build Your Page
@@ -256,7 +256,7 @@ export default function DashboardPage() {
                         ) : (
                             <Plus className="w-4 h-4 text-slate-400" />
                         )}
-                        + Create Test Page (Phase 1 Check)
+                        + Create Quick Draft
                     </button>
                 </div>
 
