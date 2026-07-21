@@ -6,7 +6,7 @@ import { getLandingPageById, updateLandingPage } from "@/lib/db";
 import { LandingPage, PageSection, SectionType } from "@/types";
 import {
     Sparkles, ArrowLeft, ArrowUp, ArrowDown, Trash2,
-    Copy, Plus, Save, Monitor, Smartphone, Loader2, Edit3, Check
+    Copy, Plus, Save, Monitor, Smartphone, Loader2, Edit3, Check, RotateCw
 } from "lucide-react";
 import Link from "next/link";
 import { exportPageToHTML } from "@/lib/exporter";
@@ -26,6 +26,8 @@ export default function VisualEditorPage() {
     // Editor Panel States
     const [selectedSectionId, setSelectedSectionId] = useState<string | null>(null);
     const [isPreviewMobile, setIsPreviewMobile] = useState<boolean>(false);
+    const [mobileWidth, setMobileWidth] = useState<number>(390);
+    const [isLandscape, setIsLandscape] = useState<boolean>(false);
     const [globalThemeColor, setGlobalThemeColor] = useState<string>("#6366f1");
 
     useEffect(() => {
@@ -471,42 +473,94 @@ export default function VisualEditorPage() {
                 </aside>
 
                 {/* 2B. Right Canvas: Live Sandbox Sandbox */}
-                <main className="flex-1 bg-slate-950 p-6 sm:p-10 flex justify-center items-start overflow-y-auto">
-                    <div
-                        className={`transition-all duration-300 w-full ${isPreviewMobile
-                            ? "max-w-[375px] border-[12px] border-slate-900 rounded-[2.5rem] shadow-2xl h-[700px] overflow-y-auto bg-slate-950 relative"
-                            : "max-w-5xl"
-                            }`}
-                    >
-                        {/* Simulation Screen Info */}
-                        {isPreviewMobile && (
-                            <div className="h-6 bg-slate-900 absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-6 text-[10px] text-slate-500 font-semibold sticky">
-                                <span>9:41 AM</span>
-                                <div className="w-16 h-3 bg-slate-950 rounded-full mx-auto" />
-                                <span>100%</span>
+                <main className="flex-1 bg-slate-950 p-6 sm:p-10 flex flex-col items-center justify-start overflow-y-auto h-full">
+                    {/* Device Simulator Control Bar */}
+                    {isPreviewMobile && (
+                        <div className="mb-6 bg-slate-900/90 border border-slate-800/80 px-4 py-2 rounded-2xl flex items-center gap-4 text-xs shadow-lg backdrop-blur shrink-0">
+                            <div className="flex items-center gap-1.5 border-r border-slate-800 pr-4">
+                                <span className="text-slate-500">Preset:</span>
+                                <select 
+                                    value={mobileWidth}
+                                    onChange={(e) => setMobileWidth(Number(e.target.value))}
+                                    className="bg-slate-950 text-slate-200 border border-slate-800 rounded px-2 py-1 focus:outline-none cursor-pointer font-medium"
+                                >
+                                    <option value={360}>iPhone SE (360px)</option>
+                                    <option value={390}>iPhone Pro (390px)</option>
+                                    <option value={430}>iPhone Pro Max (430px)</option>
+                                    <option value={768}>iPad Mini (768px)</option>
+                                </select>
                             </div>
+                            
+                            <div className="flex items-center gap-2 border-r border-slate-800 pr-4">
+                                <span className="text-slate-500">Dimensions:</span>
+                                <span className="font-mono text-indigo-400 font-bold">
+                                    {isLandscape ? "700px" : `${mobileWidth}px`} x {isLandscape ? `${mobileWidth}px` : "700px"}
+                                </span>
+                            </div>
+
+                            <button 
+                                onClick={() => setIsLandscape(!isLandscape)}
+                                className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${isLandscape ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'}`}
+                                title="Rotate Device"
+                            >
+                                <RotateCw className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    )}
+
+                    {/* The Simulator Frame */}
+                    <div className="relative">
+                        {/* Device Physical Buttons (Mock) */}
+                        {isPreviewMobile && (
+                            <>
+                                {/* Left Side Buttons (Volume Up/Down) */}
+                                <div className="absolute -left-[14px] top-24 w-[3px] h-10 bg-slate-700 rounded-l" />
+                                <div className="absolute -left-[14px] top-38 w-[3px] h-10 bg-slate-700 rounded-l" />
+                                {/* Right Side Button (Power) */}
+                                <div className="absolute -right-[14px] top-28 w-[3px] h-14 bg-slate-700 rounded-r" />
+                            </>
                         )}
 
-                        <div className="space-y-12 py-10">
-                            {page.sections.map((section) => (
-                                <div
-                                    key={section.id}
-                                    onClick={() => setSelectedSectionId(section.id)}
-                                    className={`relative rounded-3xl border transition-all ${selectedSectionId === section.id
-                                        ? "border-indigo-500 shadow-lg ring-1 ring-indigo-500 bg-slate-900/10"
-                                        : "border-transparent hover:border-slate-800"
-                                        }`}
-                                >
-                                    {/* Action Selector Indicator overlay */}
-                                    {selectedSectionId === section.id && (
-                                        <span className="absolute -top-3 left-4 px-2 py-0.5 rounded bg-indigo-600 text-[9px] font-bold uppercase text-white shadow z-10">
-                                            Selected: {section.type.toUpperCase()}
-                                        </span>
-                                    )}
-
-                                    <SectionPreviewer section={section} themeColor={globalThemeColor} />
+                        <div
+                            className={`transition-all duration-300 bg-slate-950 relative ${isPreviewMobile
+                                ? "border-[12px] border-slate-900 rounded-[2.5rem] shadow-2xl overflow-y-auto"
+                                : "w-full max-w-5xl"
+                                }`}
+                            style={isPreviewMobile ? {
+                                width: isLandscape ? "700px" : `${mobileWidth}px`,
+                                height: isLandscape ? `${mobileWidth}px` : "700px"
+                            } : undefined}
+                        >
+                            {/* Simulation Screen Header */}
+                            {isPreviewMobile && (
+                                <div className="h-6 bg-slate-900 flex items-center justify-between px-6 text-[10px] text-slate-500 font-semibold sticky top-0 z-20">
+                                    <span>9:41 AM</span>
+                                    <div className="w-16 h-3 bg-slate-950 rounded-full mx-auto" />
+                                    <span>100%</span>
                                 </div>
-                            ))}
+                            )}
+
+                            <div className="space-y-12 py-10">
+                                {page.sections.map((section) => (
+                                    <div
+                                        key={section.id}
+                                        onClick={() => setSelectedSectionId(section.id)}
+                                        className={`relative rounded-3xl border transition-all ${selectedSectionId === section.id
+                                            ? "border-indigo-500 shadow-lg ring-1 ring-indigo-500 bg-slate-900/10"
+                                            : "border-transparent hover:border-slate-800"
+                                            }`}
+                                    >
+                                        {/* Action Selector Indicator overlay */}
+                                        {selectedSectionId === section.id && (
+                                            <span className="absolute -top-3 left-4 px-2 py-0.5 rounded bg-indigo-600 text-[9px] font-bold uppercase text-white shadow z-10">
+                                                Selected: {section.type.toUpperCase()}
+                                            </span>
+                                        )}
+
+                                        <SectionPreviewer section={section} themeColor={globalThemeColor} />
+                                    </div>
+                                ))}
+                            </div>
                         </div>
                     </div>
                 </main>
