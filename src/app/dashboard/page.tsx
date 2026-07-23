@@ -15,6 +15,8 @@ import {
 import confetti from "canvas-confetti";
 import toast from "react-hot-toast";
 
+import { ThemeToggle } from "@/context/ThemeContext";
+
 const PROMPT_SUGGESTIONS = [
     "AI invoice app for freelancers with automated reminders",
     "Fitness & workout tracking platform for busy professionals",
@@ -229,11 +231,13 @@ export default function DashboardPage() {
                         </span>
                     </div>
 
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-3 sm:gap-4">
                         <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-xl bg-slate-850 border border-slate-800 text-xs text-slate-300">
                             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                             <span>{user.email}</span>
                         </div>
+
+                        <ThemeToggle />
 
                         <button
                             onClick={handleLogout}

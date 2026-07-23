@@ -8,6 +8,7 @@ import { Sparkles, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import Script from "next/script";
+import { ThemeToggle } from "@/context/ThemeContext";
 
 export default function LiveLandingPageViewer() {
     const params = useParams();
@@ -67,9 +68,12 @@ export default function LiveLandingPageViewer() {
                         <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
                         <span>PageForge Preview — <strong className="text-white">{page.title}</strong></span>
                     </div>
-                    <Link href="/dashboard" className="hover:text-white underline font-medium">
-                        Back to Dashboard →
-                    </Link>
+                    <div className="flex items-center gap-3">
+                        <ThemeToggle />
+                        <Link href="/dashboard" className="hover:text-white underline font-medium">
+                            Back to Dashboard →
+                        </Link>
+                    </div>
                 </div>
             )}
 

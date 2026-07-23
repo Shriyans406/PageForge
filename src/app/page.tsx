@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Sparkles, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ThemeToggle } from "@/context/ThemeContext";
 
 export default function Home() {
   return (
@@ -15,16 +16,17 @@ export default function Home() {
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4">
+          <ThemeToggle />
           <Link
             href="/login"
-            className="text-sm font-medium text-slate-300 hover:text-white px-4 py-2 rounded-xl transition-colors"
+            className="text-sm font-medium text-slate-300 hover:text-white px-3 py-2 rounded-xl transition-colors"
           >
             Sign In
           </Link>
           <Link
             href="/signup"
-            className="text-sm font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-500/25 transition-all"
+            className="text-sm font-semibold bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 px-5 py-2.5 rounded-xl shadow-lg shadow-indigo-500/25 transition-all text-white"
           >
             Get Started Free
           </Link>

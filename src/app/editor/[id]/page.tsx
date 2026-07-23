@@ -12,6 +12,7 @@ import Link from "next/link";
 import { exportPageToHTML } from "@/lib/exporter";
 
 import toast from "react-hot-toast";
+import { ThemeToggle } from "@/context/ThemeContext";
 
 export default function VisualEditorPage() {
     const params = useParams();
@@ -217,6 +218,7 @@ export default function VisualEditorPage() {
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <ThemeToggle />
                     <button
                         onClick={handleSave}
                         disabled={saving}
