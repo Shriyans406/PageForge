@@ -7,7 +7,7 @@ import { LandingPage, PageSection, SectionType } from "@/types";
 import {
     Sparkles, ArrowLeft, ArrowUp, ArrowDown, Trash2,
     Copy, Plus, Save, Monitor, Smartphone, Loader2, Edit3, Check, RotateCw,
-    GripVertical, GripHorizontal, Move, Maximize2
+    GripVertical, GripHorizontal, Move, Maximize2, ArrowLeftRight
 } from "lucide-react";
 import Link from "next/link";
 import { exportPageToHTML } from "@/lib/exporter";
@@ -37,6 +37,7 @@ export default function VisualEditorPage() {
     const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
     const [resizingSectionId, setResizingSectionId] = useState<string | null>(null);
     const [resizeTooltip, setResizeTooltip] = useState<{ height: number; y: number } | null>(null);
+    const [horizontalTooltip, setHorizontalTooltip] = useState<{ width: number; x: number } | null>(null);
 
     useEffect(() => {
         async function loadPageData() {
@@ -163,8 +164,8 @@ export default function VisualEditorPage() {
         setDragOverIndex(null);
     };
 
-    // Mouse Drag Resizing Handler for Section Height
-    const handleStartResize = (e: React.MouseEvent, sectionId: string, currentMinHeight: number = 280) => {
+    // Mouse Drag Resizing Handler for Vertical Section Height
+    const handleStartVerticalResize = (e: React.MouseEvent, sectionId: string, currentMinHeight: number = 280) => {
         e.preventDefault();
         e.stopPropagation();
 
@@ -201,6 +202,52 @@ export default function VisualEditorPage() {
         window.addEventListener("mouseup", handleMouseUp);
     };
 
+    // Mouse Drag Resizing Handler for Horizontal Section Width (Max-Width)
+    const handleStartHorizontalResize = (
+        e: React.MouseEvent,
+        sectionId: string,
+        side: "left" | "right",
+        currentMaxWidth: number = 800
+    ) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setResizingSectionId(sectionId);
+        const startX = e.clientX;
+        const startWidth = currentMaxWidth;
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaX = side === "right"
+                ? moveEvent.clientX - startX
+                : startX - moveEvent.clientX;
+
+            const newWidth = Math.max(380, Math.min(1400, Math.round(startWidth + deltaX * 2)));
+
+            setHorizontalTooltip({ width: newWidth, x: moveEvent.clientX });
+
+            setPage((prevPage) => {
+                if (!prevPage) return null;
+                return {
+                    ...prevPage,
+                    sections: prevPage.sections.map((sec) =>
+                        sec.id === sectionId ? { ...sec, maxWidth: newWidth } : sec
+                    ),
+                };
+            });
+        };
+
+        const handleMouseUp = () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+            setResizingSectionId(null);
+            setHorizontalTooltip(null);
+            toast.success("Section width updated!", { id: "resize-w-toast", duration: 1200 });
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+    };
+
     // Update section fields
     const updateSectionData = (sectionId: string, fields: Partial<PageSection>) => {
         if (!page) return;
@@ -221,6 +268,8 @@ export default function VisualEditorPage() {
             imageUrl: type === "hero" ? "https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=1000" : undefined,
             minHeight: 280,
             paddingY: 40,
+            maxWidth: 800,
+            paddingX: 16,
             content: type === "features" ? [
                 { title: "Feature 1", description: "Details about value 1" },
                 { title: "Feature 2", description: "Details about value 2" },
@@ -285,7 +334,7 @@ export default function VisualEditorPage() {
                                 Visual Editor Sandbox
                             </span>
                         </h1>
-                        <p className="text-[11px] text-slate-400">Drag handle or resize borders directly on canvas or sidebar</p>
+                        <p className="text-[11px] text-slate-400">Drag handles to adjust vertical height & horizontal container width</p>
                     </div>
                 </div>
 
@@ -412,7 +461,7 @@ export default function VisualEditorPage() {
                     <div className="flex-1 p-5 overflow-y-auto">
                         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5 border-b border-slate-800 pb-2">
                             <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
-                            Customize Section Content & Size
+                            Customize Section Content & Dimensions
                         </h2>
 
                         {selectedSection ? (
@@ -439,17 +488,25 @@ export default function VisualEditorPage() {
                                     </div>
                                 )}
 
-                                {/* Interactive Section Height & Padding Sliders */}
-                                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-3">
+                                {/* Interactive Section Height & Width Dimension Sliders */}
+                                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-4">
+                                    <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                                        <span className="text-[11px] font-bold text-indigo-300 uppercase tracking-wider flex items-center gap-1">
+                                            <Maximize2 className="w-3.5 h-3.5" /> Dimensions
+                                        </span>
+                                        <span className="text-[10px] text-slate-500">Mouse Drag Compliant</span>
+                                    </div>
+
+                                    {/* Vertical Height Slider */}
                                     <div>
                                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
-                                            <span>Min Height (Mouse Resizable)</span>
+                                            <span>Min Height (Vertical)</span>
                                             <span className="text-indigo-400 font-mono">{selectedSection.minHeight || 280}px</span>
                                         </div>
                                         <input
                                             type="range"
                                             min={120}
-                                            max={800}
+                                            max={900}
                                             step={10}
                                             value={selectedSection.minHeight || 280}
                                             onChange={(e) => updateSectionData(selectedSection.id, { minHeight: parseInt(e.target.value) })}
@@ -457,9 +514,49 @@ export default function VisualEditorPage() {
                                         />
                                     </div>
 
+                                    {/* Horizontal Max Width Slider */}
                                     <div>
                                         <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
-                                            <span>Vertical Padding</span>
+                                            <span>Container Max Width (Horizontal)</span>
+                                            <span className="text-indigo-400 font-mono">{selectedSection.maxWidth || 800}px</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min={380}
+                                            max={1400}
+                                            step={20}
+                                            value={selectedSection.maxWidth || 800}
+                                            onChange={(e) => updateSectionData(selectedSection.id, { maxWidth: parseInt(e.target.value) })}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                        />
+
+                                        {/* Width Presets */}
+                                        <div className="flex items-center gap-1.5 mt-2">
+                                            {[
+                                                { label: "Compact", width: 640 },
+                                                { label: "Medium", width: 800 },
+                                                { label: "Wide", width: 1024 },
+                                                { label: "Full", width: 1280 }
+                                            ].map((preset) => (
+                                                <button
+                                                    key={preset.label}
+                                                    type="button"
+                                                    onClick={() => updateSectionData(selectedSection.id, { maxWidth: preset.width })}
+                                                    className={`text-[9px] px-2 py-0.5 rounded border transition-colors ${selectedSection.maxWidth === preset.width
+                                                        ? "bg-indigo-600 text-white border-indigo-500"
+                                                        : "bg-slate-900 text-slate-400 border-slate-800 hover:text-white"
+                                                        }`}
+                                                >
+                                                    {preset.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Vertical Padding Slider */}
+                                    <div>
+                                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                            <span>Vertical Padding (Top/Bottom)</span>
                                             <span className="text-indigo-400 font-mono">{selectedSection.paddingY || 40}px</span>
                                         </div>
                                         <input
@@ -469,6 +566,23 @@ export default function VisualEditorPage() {
                                             step={4}
                                             value={selectedSection.paddingY || 40}
                                             onChange={(e) => updateSectionData(selectedSection.id, { paddingY: parseInt(e.target.value) })}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                        />
+                                    </div>
+
+                                    {/* Horizontal Padding Slider */}
+                                    <div>
+                                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                            <span>Horizontal Side Padding</span>
+                                            <span className="text-indigo-400 font-mono">{selectedSection.paddingX || 16}px</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min={8}
+                                            max={120}
+                                            step={4}
+                                            value={selectedSection.paddingX || 16}
+                                            onChange={(e) => updateSectionData(selectedSection.id, { paddingX: parseInt(e.target.value) })}
                                             className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
                                         />
                                     </div>
@@ -573,7 +687,7 @@ export default function VisualEditorPage() {
                 {/* 2B. Right Canvas Workspace & Simulator */}
                 <main className="flex-1 bg-slate-950 p-6 sm:p-10 overflow-y-auto flex flex-col items-center justify-start relative">
 
-                    {/* Resize Live Tooltip Overlay */}
+                    {/* Vertical Resize Live Tooltip Overlay */}
                     {resizingSectionId && resizeTooltip && (
                         <div
                             className="fixed z-50 px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-2xl pointer-events-none animate-pulse flex items-center gap-2"
@@ -581,6 +695,17 @@ export default function VisualEditorPage() {
                         >
                             <Maximize2 className="w-3.5 h-3.5" />
                             <span>Height: {resizeTooltip.height}px</span>
+                        </div>
+                    )}
+
+                    {/* Horizontal Resize Live Tooltip Overlay */}
+                    {resizingSectionId && horizontalTooltip && (
+                        <div
+                            className="fixed z-50 px-3 py-1.5 rounded-xl bg-violet-600 text-white text-xs font-bold shadow-2xl pointer-events-none animate-pulse flex items-center gap-2"
+                            style={{ top: "120px", left: horizontalTooltip.x, transform: "translateX(-50%)" }}
+                        >
+                            <ArrowLeftRight className="w-3.5 h-3.5" />
+                            <span>Width: {horizontalTooltip.width}px</span>
                         </div>
                     )}
 
@@ -675,6 +800,24 @@ export default function VisualEditorPage() {
                                                 : "border-slate-800 hover:border-slate-700"
                                                 } ${isDragging ? "opacity-30 scale-[0.98] border-dashed border-indigo-400" : ""} ${isTarget ? "border-t-4 border-t-indigo-500 ring-4 ring-indigo-500/20" : ""}`}
                                         >
+                                            {/* Left Interactive Side Resize Handle (Horizontal Width) */}
+                                            <div
+                                                onMouseDown={(e) => handleStartHorizontalResize(e, section.id, "left", section.maxWidth || 800)}
+                                                className="group/hresize-l absolute -left-2 top-4 bottom-4 w-4 hover:w-5 cursor-ew-resize flex items-center justify-center z-20 transition-all select-none"
+                                                title="Click and drag horizontally to resize section container width"
+                                            >
+                                                <div className="w-1.5 h-12 bg-slate-700/60 group-hover/hresize-l:bg-indigo-500 rounded-full shadow-lg transition-colors" />
+                                            </div>
+
+                                            {/* Right Interactive Side Resize Handle (Horizontal Width) */}
+                                            <div
+                                                onMouseDown={(e) => handleStartHorizontalResize(e, section.id, "right", section.maxWidth || 800)}
+                                                className="group/hresize-r absolute -right-2 top-4 bottom-4 w-4 hover:w-5 cursor-ew-resize flex items-center justify-center z-20 transition-all select-none"
+                                                title="Click and drag horizontally to resize section container width"
+                                            >
+                                                <div className="w-1.5 h-12 bg-slate-700/60 group-hover/hresize-r:bg-indigo-500 rounded-full shadow-lg transition-colors" />
+                                            </div>
+
                                             {/* Canvas Section Control Bar Header (Appears on Hover / Selection) */}
                                             <div className={`absolute -top-4 left-4 right-4 h-8 px-3 rounded-xl bg-slate-900 border border-slate-700/80 shadow-lg flex items-center justify-between z-20 backdrop-blur transition-opacity duration-200 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
                                                 <div className="flex items-center gap-2">
@@ -694,7 +837,7 @@ export default function VisualEditorPage() {
                                                 <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                                                     {/* Size Badge */}
                                                     <span className="text-[10px] text-slate-400 font-mono px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
-                                                        📏 {section.minHeight || 280}px
+                                                        📏 {section.minHeight || 280}px × ↔️ {section.maxWidth || 800}px
                                                     </span>
 
                                                     <button
@@ -735,9 +878,9 @@ export default function VisualEditorPage() {
                                                 <SectionPreviewer section={section} themeColor={globalThemeColor} />
                                             </div>
 
-                                            {/* Bottom Interactive Mouse Resize Bar */}
+                                            {/* Bottom Interactive Mouse Resize Bar (Vertical Height) */}
                                             <div
-                                                onMouseDown={(e) => handleStartResize(e, section.id, section.minHeight || 280)}
+                                                onMouseDown={(e) => handleStartVerticalResize(e, section.id, section.minHeight || 280)}
                                                 className="group/resize h-4 w-full bg-slate-900/60 hover:bg-indigo-600/80 cursor-ns-resize flex items-center justify-center rounded-b-3xl border-t border-slate-800 transition-all select-none relative z-10"
                                                 title="Click and drag vertically to resize section height with cursor"
                                             >
@@ -767,12 +910,16 @@ function SectionPreviewer({ section, themeColor }: { section: PageSection; theme
         minHeight: section.minHeight ? `${section.minHeight}px` : undefined,
         paddingTop: section.paddingY ? `${section.paddingY}px` : undefined,
         paddingBottom: section.paddingY ? `${section.paddingY}px` : undefined,
+        maxWidth: section.maxWidth ? `${section.maxWidth}px` : undefined,
+        width: section.maxWidth ? "100%" : undefined,
+        paddingLeft: section.paddingX ? `${section.paddingX}px` : undefined,
+        paddingRight: section.paddingX ? `${section.paddingX}px` : undefined,
     };
 
     switch (section.type) {
         case "hero":
             return (
-                <section style={customStyle} className="py-12 sm:py-16 px-4 text-center relative overflow-hidden flex flex-col justify-center">
+                <section style={customStyle} className="py-12 sm:py-16 px-4 text-center relative overflow-hidden flex flex-col justify-center mx-auto">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none" style={{ backgroundColor: themeColor }} />
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-4xl mx-auto text-left w-full">
                         <div className="lg:col-span-7">

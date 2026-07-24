@@ -25,8 +25,10 @@ export interface PageSection {
     ctaLink?: string;
     imageUrl?: string;        // Holds the final visual URL
     imageSearchQuery?: string; // Holds the search term used for Unsplash
-    minHeight?: number;       // Custom min height in px set via interactive mouse resize
+    minHeight?: number;       // Custom min height in px set via interactive mouse resize (vertical)
     paddingY?: number;        // Custom vertical padding in px set via mouse resize
+    maxWidth?: number;        // Custom container max width in px set via interactive horizontal mouse resize
+    paddingX?: number;        // Custom horizontal padding in px set via mouse resize
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     content?: any[];
 }

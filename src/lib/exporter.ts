@@ -73,7 +73,9 @@ export function exportPageToHTML(page: LandingPage): string {
 function renderSectionHTML(section: PageSection, themeColor: string): string {
     const customStyles = [
         section.minHeight ? `min-height: ${section.minHeight}px;` : "",
-        section.paddingY ? `padding-top: ${section.paddingY}px; padding-bottom: ${section.paddingY}px;` : ""
+        section.paddingY ? `padding-top: ${section.paddingY}px; padding-bottom: ${section.paddingY}px;` : "",
+        section.maxWidth ? `max-width: ${section.maxWidth}px; width: 100%;` : "",
+        section.paddingX ? `padding-left: ${section.paddingX}px; padding-right: ${section.paddingX}px;` : ""
     ].filter(Boolean).join(" ");
     const styleAttr = customStyles ? `style="${customStyles}"` : "";
 

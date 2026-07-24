@@ -117,6 +117,10 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
         minHeight: section.minHeight ? `${section.minHeight}px` : undefined,
         paddingTop: section.paddingY ? `${section.paddingY}px` : undefined,
         paddingBottom: section.paddingY ? `${section.paddingY}px` : undefined,
+        maxWidth: section.maxWidth ? `${section.maxWidth}px` : undefined,
+        width: section.maxWidth ? "100%" : undefined,
+        paddingLeft: section.paddingX ? `${section.paddingX}px` : undefined,
+        paddingRight: section.paddingX ? `${section.paddingX}px` : undefined,
     };
 
     switch (section.type) {
