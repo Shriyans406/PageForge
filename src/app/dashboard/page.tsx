@@ -349,7 +349,7 @@ export default function DashboardPage() {
                                     key={idx}
                                     type="button"
                                     onClick={() => setPromptText(suggestion)}
-                                    className="text-xs px-2.5 py-1 rounded-lg bg-slate-800/60 hover:bg-indigo-600/20 text-slate-300 hover:text-indigo-300 border border-slate-700/50 transition-colors"
+                                    className="quick-chip text-xs px-2.5 py-1 rounded-lg bg-slate-800/60 hover:bg-indigo-600/20 text-slate-300 hover:text-indigo-300 border border-slate-700/50 transition-colors"
                                 >
                                     {suggestion}
                                 </button>

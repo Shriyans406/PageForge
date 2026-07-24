@@ -1,43 +1,53 @@
 @import "tailwindcss";
 
-:root {
-  --background: #020617;
-  --foreground: #f8fafc;
-}
+/* ==========================================================
+   PAGEFORGE THEME SYSTEM & CSS VARIABLES
+   ========================================================== */
 
-/* Light Theme Variables & Overrides */
-html.light,
-[data-theme="light"] {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  color-scheme: light;
-}
-
+:root,
 html.dark,
 [data-theme="dark"] {
-  --background: #020617;
-  --foreground: #f8fafc;
+  --bg-app: #020617;
+  --bg-surface: #0f172a;
+  --bg-surface-elevated: #1e293b;
+  --border-color: #1e293b;
+  --text-heading: #ffffff;
+  --text-body: #e2e8f0;
+  --text-muted: #94a3b8;
   color-scheme: dark;
 }
 
+html.light,
+[data-theme="light"] {
+  --bg-app: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-surface-elevated: #f1f5f9;
+  --border-color: #e2e8f0;
+  --text-heading: #0f172a;
+  --text-body: #334155;
+  --text-muted: #64748b;
+  color-scheme: light;
+}
+
 body {
-  background-color: var(--background);
-  color: var(--foreground);
+  background-color: var(--bg-app);
+  color: var(--text-body);
   font-family: Arial, Helvetica, sans-serif;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
-/* Global Light Theme UI Adjustments */
-html.light body {
-  background-color: #f8fafc !important;
-  color: #0f172a !important;
-}
+/* ==========================================================
+   LIGHT MODE PRECISE CONTRAST & CARD STYLING
+   ========================================================== */
 
+/* Main page backgrounds */
+html.light body,
 html.light .bg-slate-950 {
   background-color: #f8fafc !important;
   color: #0f172a !important;
 }
 
+/* Card surfaces & Header bars */
 html.light .bg-slate-900,
 html.light .bg-slate-900\/90,
 html.light .bg-slate-900\/80,
@@ -45,24 +55,42 @@ html.light .bg-slate-900\/60,
 html.light .bg-slate-900\/50,
 html.light .bg-slate-900\/40,
 html.light .bg-slate-900\/30,
-html.light .bg-slate-900\/20 {
+html.light .bg-slate-900\/20,
+html.light .bg-slate-900\/10 {
   background-color: #ffffff !important;
   color: #0f172a !important;
-  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05);
 }
 
+/* Hero & AI Box Background Gradient in Light Mode */
+html.light .bg-gradient-to-b.from-slate-900,
+html.light .bg-gradient-to-b.from-slate-900.via-slate-900\/90.to-slate-900\/50 {
+  background-image: linear-gradient(to bottom, #ffffff, #f1f5f9) !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 25px -5px rgba(99, 102, 241, 0.08) !important;
+}
+
+/* Inner Panels & Sub-cards */
 html.light .bg-slate-850,
-html.light .bg-slate-800 {
+html.light .bg-slate-800,
+html.light .bg-slate-800\/80,
+html.light .bg-slate-800\/60,
+html.light .bg-slate-800\/50,
+html.light .bg-slate-800\/30,
+html.light .bg-slate-950\/40 {
   background-color: #f1f5f9 !important;
   color: #1e293b !important;
 }
 
+/* Hover effects */
 html.light .hover\:bg-slate-800:hover,
 html.light .hover\:bg-slate-700:hover {
   background-color: #e2e8f0 !important;
 }
 
+/* Borders */
 html.light .border-slate-900,
+html.light .border-slate-850,
 html.light .border-slate-800,
 html.light .border-slate-800\/80,
 html.light .border-slate-800\/50,
@@ -72,10 +100,12 @@ html.light .border-slate-700\/50 {
   border-color: #e2e8f0 !important;
 }
 
+/* Headings and Titles */
 html.light .text-white {
   color: #0f172a !important;
 }
 
+html.light .text-slate-100,
 html.light .text-slate-200,
 html.light .text-slate-300 {
   color: #334155 !important;
@@ -86,6 +116,7 @@ html.light .text-slate-500 {
   color: #64748b !important;
 }
 
+/* Form Controls (Inputs, Selects, Textareas) */
 html.light input,
 html.light select,
 html.light textarea {
@@ -99,24 +130,63 @@ html.light textarea::placeholder {
   color: #94a3b8 !important;
 }
 
-/* Ensure colored CTA buttons and badge texts remain white */
+/* Quick Suggestion Chips - Crystal Clear Contrast in Light Mode */
+html.light .quick-chip,
+html.light button.bg-slate-800\/60,
+html.light button.bg-slate-800 {
+  background-color: #ffffff !important;
+  color: #334155 !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+html.light .quick-chip:hover,
+html.light button.bg-slate-800\/60:hover,
+html.light button.bg-slate-800:hover {
+  background-color: #e0e7ff !important;
+  color: #4338ca !important;
+  border-color: #a5b4fc !important;
+}
+
+/* Selected Section Item in Editor Left Sidebar */
+html.light .bg-indigo-600\/10 {
+  background-color: #e0e7ff !important;
+  border-color: #6366f1 !important;
+  color: #3730a3 !important;
+}
+
+/* A/B Testing Results Block in Cards */
+html.light .bg-indigo-950\/30 {
+  background-color: #eff6ff !important;
+  border-color: #bfdbfe !important;
+}
+
+/* Buttons with explicit filled colors (CTAs, primary buttons) maintain white text */
 html.light .bg-gradient-to-r,
+html.light .bg-gradient-to-tr,
 html.light .bg-indigo-600,
 html.light .bg-indigo-500,
 html.light .bg-violet-600,
 html.light .bg-emerald-600,
-html.light .text-white.bg-indigo-600,
-html.light .text-white.bg-violet-600,
-html.light [class*="bg-indigo-"] .text-white,
-html.light [class*="bg-violet-"] .text-white,
-html.light [class*="from-violet-"] .text-white {
+html.light button.bg-indigo-600,
+html.light button.bg-violet-600,
+html.light a.bg-indigo-600,
+html.light a.bg-violet-600 {
   color: #ffffff !important;
 }
 
-html.light .from-white.to-slate-300,
+html.light .bg-gradient-to-r *,
+html.light .bg-gradient-to-tr *,
+html.light .bg-indigo-600 *,
+html.light .bg-violet-600 * {
+  color: inherit;
+}
+
+/* Gradient Text Headers (e.g. PageForge logo title) in Light Mode */
 html.light .from-white.via-slate-200.to-slate-400,
+html.light .from-white.to-slate-300,
 html.light .from-white.to-slate-400 {
   --tw-gradient-from: #0f172a !important;
   --tw-gradient-to: #334155 !important;
+  background-image: linear-gradient(to right, #0f172a, #334155) !important;
 }
-
