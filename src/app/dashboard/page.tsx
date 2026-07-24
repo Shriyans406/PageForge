@@ -226,7 +226,7 @@ export default function DashboardPage() {
                         <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                             <Sparkles className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
+                        <span className="text-xl font-bold text-slate-900 dark:text-white">
                             PageForge
                         </span>
                     </div>

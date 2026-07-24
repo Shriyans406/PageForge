@@ -52,7 +52,7 @@ export default function LoginPage() {
                     <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-indigo-500/30">
                         <Sparkles className="w-6 h-6 text-white" />
                     </div>
-                    <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-slate-400">
+                    <span className="text-2xl font-bold text-slate-900 dark:text-white">
                         PageForge
                     </span>
                 </div>
