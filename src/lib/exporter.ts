@@ -71,10 +71,16 @@ export function exportPageToHTML(page: LandingPage): string {
 }
 
 function renderSectionHTML(section: PageSection, themeColor: string): string {
+    const customStyles = [
+        section.minHeight ? `min-height: ${section.minHeight}px;` : "",
+        section.paddingY ? `padding-top: ${section.paddingY}px; padding-bottom: ${section.paddingY}px;` : ""
+    ].filter(Boolean).join(" ");
+    const styleAttr = customStyles ? `style="${customStyles}"` : "";
+
     switch (section.type) {
         case "hero":
             return `
-    <section class="py-24 sm:py-32 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative overflow-hidden">
+    <section ${styleAttr} class="py-24 sm:py-32 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative overflow-hidden">
         <div class="absolute right-0 top-1/4 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none" style="background-color: ${themeColor}"></div>
         <div class="lg:col-span-7 text-left flex flex-col justify-center">
             <h1 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-white mb-6 leading-tight">
@@ -113,7 +119,7 @@ function renderSectionHTML(section: PageSection, themeColor: string): string {
             </div>`).join("\n") : "";
 
             return `
-    <section class="py-20 px-4 max-w-7xl mx-auto border-t border-slate-900">
+    <section ${styleAttr} class="py-20 px-4 max-w-7xl mx-auto border-t border-slate-900">
         <div class="text-center max-w-3xl mx-auto mb-16">
             <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">${escapeHTML(section.title)}</h2>
             ${section.subtitle ? `<p class="text-slate-400 text-lg">${escapeHTML(section.subtitle)}</p>` : ""}
@@ -147,7 +153,7 @@ function renderSectionHTML(section: PageSection, themeColor: string): string {
             </div>`).join("\n") : "";
 
             return `
-    <section class="py-20 px-4 max-w-6xl mx-auto border-t border-slate-900">
+    <section ${styleAttr} class="py-20 px-4 max-w-6xl mx-auto border-t border-slate-900">
         <div class="text-center max-w-3xl mx-auto mb-16">
             <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">${escapeHTML(section.title)}</h2>
             ${section.subtitle ? `<p class="text-slate-400 text-lg">${escapeHTML(section.subtitle)}</p>` : ""}
@@ -170,10 +176,9 @@ function renderSectionHTML(section: PageSection, themeColor: string): string {
             </div>`).join("\n") : "";
 
             return `
-    <section class="py-20 px-4 max-w-4xl mx-auto border-t border-slate-900">
+    <section ${styleAttr} class="py-20 px-4 max-w-3xl mx-auto border-t border-slate-900">
         <div class="text-center max-w-3xl mx-auto mb-16">
             <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4">${escapeHTML(section.title)}</h2>
-            ${section.subtitle ? `<p class="text-slate-400 text-lg">${escapeHTML(section.subtitle)}</p>` : ""}
         </div>
         <div class="space-y-4">
             ${faqList}
@@ -182,15 +187,17 @@ function renderSectionHTML(section: PageSection, themeColor: string): string {
 
         case "cta":
             return `
-    <section class="py-20 px-4 max-w-5xl mx-auto my-12 text-center rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-900/40 p-12 relative overflow-hidden">
-        <div class="absolute inset-0 opacity-10 blur-3xl pointer-events-none" style="background-color: ${themeColor}"></div>
-        <h2 class="text-3xl sm:text-5xl font-extrabold text-white mb-4 max-w-2xl mx-auto">${escapeHTML(section.title)}</h2>
-        ${section.subtitle ? `<p class="text-slate-400 text-lg max-w-xl mx-auto mb-8">${escapeHTML(section.subtitle)}</p>` : ""}
+    <section ${styleAttr} class="py-20 px-8 my-12 text-center rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-950 max-w-5xl mx-auto relative overflow-hidden shadow-2xl">
+        <div class="absolute inset-0 opacity-10 blur-2xl pointer-events-none" style="background-color: ${themeColor}"></div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-white mb-4 max-w-2xl mx-auto leading-tight">${escapeHTML(section.title)}</h2>
+        ${section.subtitle ? `<p class="text-slate-400 text-base sm:text-lg mb-8 max-w-xl mx-auto">${escapeHTML(section.subtitle)}</p>` : ""}
         ${section.ctaText ? `
-        <a href="${escapeHTML(section.ctaLink || "#")}" class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-white text-lg shadow-xl hover:opacity-90 transition-all" style="background-color: ${themeColor}">
-            ${escapeHTML(section.ctaText)}
-            <i data-lucide="arrow-right" class="w-5 h-5"></i>
-        </a>` : ""}
+        <div>
+            <a href="${escapeHTML(section.ctaLink || "#")}" class="inline-flex items-center gap-2 px-8 py-4 rounded-2xl font-bold text-white text-base shadow-xl hover:shadow-2xl transition-all" style="background-color: ${themeColor}">
+                ${escapeHTML(section.ctaText)}
+                <i data-lucide="arrow-right" class="w-5 h-5"></i>
+            </a>
+        </div>` : ""}
     </section>`;
 
         default:

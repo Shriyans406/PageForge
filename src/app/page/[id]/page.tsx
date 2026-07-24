@@ -113,10 +113,16 @@ export default function LiveLandingPageViewer() {
  * Helper component that renders the right UI layout based on section type (`hero`, `features`, `pricing`, `faq`, `cta`).
  */
 function SectionRenderer({ section, themeColor }: { section: PageSection; themeColor: string }) {
+    const customStyle: React.CSSProperties = {
+        minHeight: section.minHeight ? `${section.minHeight}px` : undefined,
+        paddingTop: section.paddingY ? `${section.paddingY}px` : undefined,
+        paddingBottom: section.paddingY ? `${section.paddingY}px` : undefined,
+    };
+
     switch (section.type) {
         case "hero":
             return (
-                <section id="hero" className="py-20 lg:py-28 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative overflow-hidden">
+                <section id="hero" style={customStyle} className="py-20 lg:py-28 px-4 max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center relative overflow-hidden">
                     {/* Glowing background blob decor */}
                     <div
                         className="absolute right-0 top-1/4 w-96 h-96 rounded-full blur-3xl opacity-15 pointer-events-none"
@@ -173,7 +179,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "features":
             return (
-                <section id="features" className="py-20 px-4 max-w-7xl mx-auto border-t border-slate-900">
+                <section id="features" style={customStyle} className="py-20 px-4 max-w-7xl mx-auto border-t border-slate-900">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">{section.title}</h2>
                         {section.subtitle && <p className="text-slate-400 text-lg">{section.subtitle}</p>}
@@ -198,7 +204,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "pricing":
             return (
-                <section id="pricing" className="py-20 px-4 max-w-6xl mx-auto border-t border-slate-900">
+                <section id="pricing" style={customStyle} className="py-20 px-4 max-w-6xl mx-auto border-t border-slate-900">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">{section.title}</h2>
                         {section.subtitle && <p className="text-slate-400 text-lg">{section.subtitle}</p>}
@@ -247,7 +253,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "faq":
             return (
-                <section id="faq" className="py-20 px-4 max-w-4xl mx-auto border-t border-slate-900">
+                <section id="faq" style={customStyle} className="py-20 px-4 max-w-4xl mx-auto border-t border-slate-900">
                     <div className="text-center max-w-3xl mx-auto mb-16">
                         <h2 className="text-3xl sm:text-4xl font-extrabold text-white mb-4">{section.title}</h2>
                         {section.subtitle && <p className="text-slate-400 text-lg">{section.subtitle}</p>}
@@ -271,7 +277,7 @@ function SectionRenderer({ section, themeColor }: { section: PageSection; themeC
 
         case "cta":
             return (
-                <section id="cta" className="py-20 px-4 max-w-5xl mx-auto my-12 text-center rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-900/40 p-12 relative overflow-hidden">
+                <section id="cta" style={customStyle} className="py-20 px-4 max-w-5xl mx-auto my-12 text-center rounded-3xl border border-slate-800 bg-gradient-to-b from-slate-900 to-slate-900/40 p-12 relative overflow-hidden">
                     <div
                         className="absolute inset-0 opacity-10 blur-3xl pointer-events-none"
                         style={{ backgroundColor: themeColor }}

@@ -6,7 +6,8 @@ import { getLandingPageById, updateLandingPage } from "@/lib/db";
 import { LandingPage, PageSection, SectionType } from "@/types";
 import {
     Sparkles, ArrowLeft, ArrowUp, ArrowDown, Trash2,
-    Copy, Plus, Save, Monitor, Smartphone, Loader2, Edit3, Check, RotateCw
+    Copy, Plus, Save, Monitor, Smartphone, Loader2, Edit3, Check, RotateCw,
+    GripVertical, GripHorizontal, Move, Maximize2
 } from "lucide-react";
 import Link from "next/link";
 import { exportPageToHTML } from "@/lib/exporter";
@@ -31,6 +32,12 @@ export default function VisualEditorPage() {
     const [isLandscape, setIsLandscape] = useState<boolean>(false);
     const [globalThemeColor, setGlobalThemeColor] = useState<string>("#6366f1");
 
+    // Canvas Interactive Drag & Drop and Resizing States
+    const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+    const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+    const [resizingSectionId, setResizingSectionId] = useState<string | null>(null);
+    const [resizeTooltip, setResizeTooltip] = useState<{ height: number; y: number } | null>(null);
+
     useEffect(() => {
         async function loadPageData() {
             if (!pageId) return;
@@ -52,7 +59,7 @@ export default function VisualEditorPage() {
         loadPageData();
     }, [pageId]);
 
-    if (loading) {
+    if (loading || !page) {
         return (
             <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
                 <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
@@ -60,68 +67,145 @@ export default function VisualEditorPage() {
         );
     }
 
-    if (!page) {
-        return (
-            <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-white px-4 text-center">
-                <h1 className="text-3xl font-extrabold mb-2">Page Configuration Not Found</h1>
-                <p className="text-slate-400 mb-6">We could not retrieve the builder setup for this ID.</p>
-                <Link href="/dashboard" className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 font-bold text-sm">
-                    Back to Dashboard
-                </Link>
-            </div>
-        );
-    }
-
-    // ==========================================
-    // SECTION OPERATIONS
-    // ==========================================
-
+    // Save Page changes to Firestore
     const handleSave = async () => {
-        if (!page || !page.id) return;
+        if (!page || !pageId) return;
         setSaving(true);
         setSaveSuccess(false);
+
         try {
-            await updateLandingPage(page.id, {
-                sections: page.sections,
+            const updatedPage: LandingPage = {
+                ...page,
                 themeColor: globalThemeColor,
-                title: page.title,
-                description: page.description,
-                isPublished: page.isPublished
-            });
-            toast.success("Page layout saved successfully!");
-        } catch (err) {
-            console.error("Error saving layout updates:", err);
-            alert("Failed to save changes. Please try again.");
+                updatedAt: Date.now()
+            };
+
+            await updateLandingPage(pageId, updatedPage);
+            setPage(updatedPage);
+            setSaveSuccess(true);
+            toast.success("Page configuration saved successfully!");
+            setTimeout(() => setSaveSuccess(false), 2500);
+        } catch (error) {
+            console.error("Error saving page:", error);
             toast.error("Failed to save changes.");
         } finally {
             setSaving(false);
         }
     };
 
-    const updateSectionData = (sectionId: string, fieldsToUpdate: Partial<PageSection>) => {
+    // Export HTML code
+    const handleExportHTML = () => {
         if (!page) return;
-        const updatedSections = page.sections.map(s => {
-            if (s.id === sectionId) {
-                return { ...s, ...fieldsToUpdate };
-            }
-            return s;
-        });
+        const htmlCode = exportPageToHTML({ ...page, themeColor: globalThemeColor });
+        const blob = new Blob([htmlCode], { type: "text/html" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${page.title.toLowerCase().replace(/[^a-z0-9]/g, "-")}-pageforge.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.success("Exported standalone HTML file!");
+    };
+
+    // Reorder sections via sidebar buttons
+    const handleSectionReorder = (index: number, direction: "up" | "down") => {
+        if (!page) return;
+        const targetIndex = direction === "up" ? index - 1 : index + 1;
+        if (targetIndex < 0 || targetIndex >= page.sections.length) return;
+
+        const updatedSections = [...page.sections];
+        const temp = updatedSections[index];
+        updatedSections[index] = updatedSections[targetIndex];
+        updatedSections[targetIndex] = temp;
+
         setPage({ ...page, sections: updatedSections });
     };
 
-    const handleSectionReorder = (index: number, direction: "up" | "down") => {
+    // Canvas HTML5 Drag & Drop Handlers
+    const handleCanvasDragStart = (e: React.DragEvent, index: number) => {
+        setDraggedIndex(index);
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", index.toString());
+    };
+
+    const handleCanvasDragOver = (e: React.DragEvent, index: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (dragOverIndex !== index) {
+            setDragOverIndex(index);
+        }
+    };
+
+    const handleCanvasDrop = (e: React.DragEvent, targetIndex: number) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (draggedIndex === null || draggedIndex === targetIndex) {
+            setDraggedIndex(null);
+            setDragOverIndex(null);
+            return;
+        }
+
+        const updatedSections = [...page.sections];
+        const [movedSection] = updatedSections.splice(draggedIndex, 1);
+        updatedSections.splice(targetIndex, 0, movedSection);
+
+        setPage({ ...page, sections: updatedSections });
+        setSelectedSectionId(movedSection.id);
+        toast.success(`Reordered ${movedSection.type.toUpperCase()} section!`, { duration: 1500 });
+
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    const handleCanvasDragEnd = () => {
+        setDraggedIndex(null);
+        setDragOverIndex(null);
+    };
+
+    // Mouse Drag Resizing Handler for Section Height
+    const handleStartResize = (e: React.MouseEvent, sectionId: string, currentMinHeight: number = 280) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        setResizingSectionId(sectionId);
+        const startY = e.clientY;
+        const startHeight = currentMinHeight;
+
+        const handleMouseMove = (moveEvent: MouseEvent) => {
+            const deltaY = moveEvent.clientY - startY;
+            const newHeight = Math.max(120, Math.min(900, Math.round(startHeight + deltaY)));
+
+            setResizeTooltip({ height: newHeight, y: moveEvent.clientY });
+
+            setPage((prevPage) => {
+                if (!prevPage) return null;
+                return {
+                    ...prevPage,
+                    sections: prevPage.sections.map((sec) =>
+                        sec.id === sectionId ? { ...sec, minHeight: newHeight } : sec
+                    ),
+                };
+            });
+        };
+
+        const handleMouseUp = () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+            setResizingSectionId(null);
+            setResizeTooltip(null);
+            toast.success("Section height updated!", { id: "resize-toast", duration: 1200 });
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+    };
+
+    // Update section fields
+    const updateSectionData = (sectionId: string, fields: Partial<PageSection>) => {
         if (!page) return;
-        const newSections = [...page.sections];
-        const targetIndex = direction === "up" ? index - 1 : index + 1;
-
-        if (targetIndex < 0 || targetIndex >= newSections.length) return;
-
-        // Swap sections
-        const temp = newSections[index];
-        newSections[index] = newSections[targetIndex];
-        newSections[targetIndex] = temp;
-
-        setPage({ ...page, sections: newSections });
+        const updated = page.sections.map(s => s.id === sectionId ? { ...s, ...fields } : s);
+        setPage({ ...page, sections: updated });
     };
 
     const handleAddSection = (type: SectionType) => {
@@ -135,6 +219,8 @@ export default function VisualEditorPage() {
             ctaText: type === "hero" || type === "cta" ? "Get Started" : undefined,
             ctaLink: type === "hero" || type === "cta" ? "#" : undefined,
             imageUrl: type === "hero" ? "https://images.unsplash.com/photo-1551434678-e076c223a692?q=80&w=1000" : undefined,
+            minHeight: 280,
+            paddingY: 40,
             content: type === "features" ? [
                 { title: "Feature 1", description: "Details about value 1" },
                 { title: "Feature 2", description: "Details about value 2" },
@@ -191,13 +277,19 @@ export default function VisualEditorPage() {
                     <Link href="/dashboard" className="p-2 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition-colors">
                         <ArrowLeft className="w-4 h-4" />
                     </Link>
+
                     <div>
-                        <h1 className="text-sm font-bold leading-tight">{page.title}</h1>
-                        <span className="text-xs text-slate-400">Visual Editor Sandbox</span>
+                        <h1 className="text-sm font-bold text-white flex items-center gap-2">
+                            {page.title}
+                            <span className="text-[10px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
+                                Visual Editor Sandbox
+                            </span>
+                        </h1>
+                        <p className="text-[11px] text-slate-400">Drag handle or resize borders directly on canvas or sidebar</p>
                     </div>
                 </div>
 
-                {/* Desktop/Mobile Simulator Toggle */}
+                {/* Center Device View Switcher */}
                 <div className="flex items-center bg-slate-950 rounded-xl p-1 border border-slate-800">
                     <button
                         onClick={() => setIsPreviewMobile(false)}
@@ -260,10 +352,11 @@ export default function VisualEditorPage() {
                                         }`}
                                 >
                                     <div className="flex items-center gap-2">
+                                        <GripVertical className="w-3.5 h-3.5 text-slate-500 hover:text-white cursor-grab" />
                                         <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-mono text-slate-400">
                                             {section.type.toUpperCase()}
                                         </span>
-                                        <span className="text-xs font-bold truncate max-w-[100px]">{section.title}</span>
+                                        <span className="text-xs font-bold truncate max-w-[90px]">{section.title}</span>
                                     </div>
 
                                     <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
@@ -319,7 +412,7 @@ export default function VisualEditorPage() {
                     <div className="flex-1 p-5 overflow-y-auto">
                         <h2 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 flex items-center gap-1.5 border-b border-slate-800 pb-2">
                             <Edit3 className="w-3.5 h-3.5 text-indigo-400" />
-                            Customize Section Content
+                            Customize Section Content & Size
                         </h2>
 
                         {selectedSection ? (
@@ -341,10 +434,45 @@ export default function VisualEditorPage() {
                                             value={selectedSection.subtitle}
                                             onChange={(e) => updateSectionData(selectedSection.id, { subtitle: e.target.value })}
                                             className="w-full mt-1.5 p-3 rounded-xl bg-slate-950 border border-slate-800 text-sm text-white focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
-                                            rows={4}
+                                            rows={3}
                                         />
                                     </div>
                                 )}
+
+                                {/* Interactive Section Height & Padding Sliders */}
+                                <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800/80 space-y-3">
+                                    <div>
+                                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                            <span>Min Height (Mouse Resizable)</span>
+                                            <span className="text-indigo-400 font-mono">{selectedSection.minHeight || 280}px</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min={120}
+                                            max={800}
+                                            step={10}
+                                            value={selectedSection.minHeight || 280}
+                                            onChange={(e) => updateSectionData(selectedSection.id, { minHeight: parseInt(e.target.value) })}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <div className="flex items-center justify-between text-[10px] font-bold text-slate-400 uppercase mb-1">
+                                            <span>Vertical Padding</span>
+                                            <span className="text-indigo-400 font-mono">{selectedSection.paddingY || 40}px</span>
+                                        </div>
+                                        <input
+                                            type="range"
+                                            min={16}
+                                            max={160}
+                                            step={4}
+                                            value={selectedSection.paddingY || 40}
+                                            onChange={(e) => updateSectionData(selectedSection.id, { paddingY: parseInt(e.target.value) })}
+                                            className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+                                        />
+                                    </div>
+                                </div>
 
                                 {selectedSection.ctaText !== undefined && (
                                     <div className="grid grid-cols-2 gap-2">
@@ -388,9 +516,8 @@ export default function VisualEditorPage() {
                         )}
                     </div>
 
-
                     {/* Global Page Settings, Publishing & Exporting */}
-                    <div className="p-5 border-t border-slate-800 bg-slate-950/40 space-y-5">
+                    <div className="p-5 border-t border-slate-800 bg-slate-950/40 space-y-4">
 
                         {/* Theme Customizer */}
                         <div>
@@ -412,7 +539,7 @@ export default function VisualEditorPage() {
                         </div>
 
                         {/* Public / Draft Toggle */}
-                        <div className="pt-4 border-t border-slate-800/80">
+                        <div className="pt-3 border-t border-slate-800/80">
                             <label className="text-[10px] font-bold text-slate-400 uppercase block mb-2">Publishing Status</label>
                             <div className="flex items-center justify-between p-3 rounded-xl bg-slate-950 border border-slate-800">
                                 <span className="text-xs text-slate-300 font-semibold">
@@ -430,88 +557,73 @@ export default function VisualEditorPage() {
                             </div>
                         </div>
 
-                        {/* A/B Testing Toggle */}
-                        <div className="flex items-center gap-3 bg-slate-900/80 px-4 py-2 rounded-xl border border-slate-700/50 mb-4">
-                            <label className="text-sm font-semibold text-slate-300">A/B Testing</label>
+                        {/* Export Standalone HTML */}
+                        <div className="pt-3 border-t border-slate-800/80">
                             <button
-                                onClick={() => setPage({ ...page, abTestEnabled: !page.abTestEnabled })}
-                                className={`w-11 h-6 rounded-full transition-colors relative ${page.abTestEnabled ? 'bg-indigo-500' : 'bg-slate-700'}`}
+                                onClick={handleExportHTML}
+                                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs border border-slate-700 transition-all flex items-center justify-center gap-2"
                             >
-                                <span className={`absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-white transition-all ${page.abTestEnabled ? 'left-6' : 'left-1'}`} />
-                            </button>
-                        </div>
-
-                        {page.abTestEnabled && (
-                            <div className="flex items-center gap-3 bg-indigo-500/10 px-4 py-3 rounded-xl border border-indigo-500/30 mb-4 w-full">
-                                <label className="text-sm font-bold text-indigo-300 whitespace-nowrap">Variant B Headline:</label>
-                                <input
-                                    type="text"
-                                    className="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-indigo-500"
-                                    placeholder="Enter an alternative headline..."
-                                    value={page.variantBHeadline || ""}
-                                    onChange={(e) => setPage({ ...page, variantBHeadline: e.target.value })}
-                                />
-                            </div>
-                        )}
-
-                        {/* Standalone HTML Export */}
-                        <div className="pt-1">
-                            <button
-                                onClick={() => {
-                                    const compiledHTML = exportPageToHTML(page);
-                                    const blob = new Blob([compiledHTML], { type: "text/html" });
-                                    const link = document.createElement("a");
-                                    link.href = URL.createObjectURL(blob);
-                                    link.download = `${page.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-landing-page.html`;
-                                    link.click();
-                                }}
-                                className="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition-all border border-slate-700/60 flex items-center justify-center gap-2"
-                            >
-                                <Save className="w-4 h-4 text-indigo-400" />
+                                <Save className="w-3.5 h-3.5 text-indigo-400" />
                                 Export Standalone HTML
                             </button>
                         </div>
                     </div>
                 </aside>
 
-                {/* 2B. Right Canvas: Live Sandbox Sandbox */}
-                <main className="flex-1 bg-slate-950 p-6 sm:p-10 flex flex-col items-center justify-start overflow-y-auto h-full">
-                    {/* Device Simulator Control Bar */}
+                {/* 2B. Right Canvas Workspace & Simulator */}
+                <main className="flex-1 bg-slate-950 p-6 sm:p-10 overflow-y-auto flex flex-col items-center justify-start relative">
+
+                    {/* Resize Live Tooltip Overlay */}
+                    {resizingSectionId && resizeTooltip && (
+                        <div
+                            className="fixed z-50 px-3 py-1.5 rounded-xl bg-indigo-600 text-white text-xs font-bold shadow-2xl pointer-events-none animate-pulse flex items-center gap-2"
+                            style={{ top: resizeTooltip.y - 40, left: "50%", transform: "translateX(-50%)" }}
+                        >
+                            <Maximize2 className="w-3.5 h-3.5" />
+                            <span>Height: {resizeTooltip.height}px</span>
+                        </div>
+                    )}
+
+                    {/* Mobile Device Simulation Toolbar Controls */}
                     {isPreviewMobile && (
-                        <div className="mb-6 bg-slate-900/90 border border-slate-800/80 px-4 py-2 rounded-2xl flex items-center gap-4 text-xs shadow-lg backdrop-blur shrink-0">
-                            <div className="flex items-center gap-1.5 border-r border-slate-800 pr-4">
-                                <span className="text-slate-500">Preset:</span>
-                                <select 
+                        <div className="mb-6 flex flex-wrap items-center justify-center gap-3 bg-slate-900/90 p-2.5 rounded-2xl border border-slate-800 shadow-xl z-10 backdrop-blur text-xs">
+                            <div className="flex items-center gap-1.5 text-slate-400 font-medium px-2">
+                                <Smartphone className="w-4 h-4 text-indigo-400" />
+                                <span>Preset:</span>
+                                <select
                                     value={mobileWidth}
                                     onChange={(e) => setMobileWidth(Number(e.target.value))}
-                                    className="bg-slate-950 text-slate-200 border border-slate-800 rounded px-2 py-1 focus:outline-none cursor-pointer font-medium"
+                                    className="bg-slate-950 border border-slate-800 text-white rounded-lg px-2 py-1 text-xs focus:outline-none cursor-pointer"
                                 >
-                                    <option value={360}>iPhone SE (360px)</option>
-                                    <option value={390}>iPhone Pro (390px)</option>
+                                    <option value={375}>iPhone SE / Mini (375px)</option>
+                                    <option value={390}>iPhone 14 / 15 Pro (390px)</option>
                                     <option value={430}>iPhone Pro Max (430px)</option>
-                                    <option value={768}>iPad Mini (768px)</option>
+                                    <option value={412}>Google Pixel (412px)</option>
+                                    <option value={360}>Android Compact (360px)</option>
                                 </select>
                             </div>
-                            
-                            <div className="flex items-center gap-2 border-r border-slate-800 pr-4">
-                                <span className="text-slate-500">Dimensions:</span>
-                                <span className="font-mono text-indigo-400 font-bold">
-                                    {isLandscape ? "700px" : `${mobileWidth}px`} x {isLandscape ? `${mobileWidth}px` : "700px"}
-                                </span>
-                            </div>
 
-                            <button 
+                            <div className="h-4 w-px bg-slate-800" />
+
+                            <button
                                 onClick={() => setIsLandscape(!isLandscape)}
-                                className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${isLandscape ? 'bg-indigo-600 border-indigo-500 text-white' : 'bg-slate-950 border-slate-800 text-slate-400 hover:text-slate-200'}`}
-                                title="Rotate Device"
+                                className={`px-2.5 py-1 rounded-lg flex items-center gap-1 font-semibold transition-all ${isLandscape ? "bg-indigo-600 text-white" : "bg-slate-800 text-slate-300 hover:text-white"}`}
+                                title="Toggle Screen Orientation"
                             >
                                 <RotateCw className="w-3.5 h-3.5" />
+                                {isLandscape ? "Landscape" : "Portrait"}
                             </button>
+
+                            <div className="h-4 w-px bg-slate-800" />
+
+                            <span className="text-slate-400 font-mono">
+                                {isLandscape ? `700px × ${mobileWidth}px` : `${mobileWidth}px × 700px`}
+                            </span>
                         </div>
                     )}
 
                     {/* The Simulator Frame */}
-                    <div className="relative">
+                    <div className="relative max-w-full">
                         {/* Device Physical Buttons (Mock) */}
                         {isPreviewMobile && (
                             <>
@@ -542,26 +654,101 @@ export default function VisualEditorPage() {
                                 </div>
                             )}
 
-                            <div className="space-y-12 py-10">
-                                {page.sections.map((section) => (
-                                    <div
-                                        key={section.id}
-                                        onClick={() => setSelectedSectionId(section.id)}
-                                        className={`relative rounded-3xl border transition-all ${selectedSectionId === section.id
-                                            ? "border-indigo-500 shadow-lg ring-1 ring-indigo-500 bg-slate-900/10"
-                                            : "border-transparent hover:border-slate-800"
-                                            }`}
-                                    >
-                                        {/* Action Selector Indicator overlay */}
-                                        {selectedSectionId === section.id && (
-                                            <span className="absolute -top-3 left-4 px-2 py-0.5 rounded bg-indigo-600 text-[9px] font-bold uppercase text-white shadow z-10">
-                                                Selected: {section.type.toUpperCase()}
-                                            </span>
-                                        )}
+                            {/* Section Canvas List with Interactive Drag & Resize Handles */}
+                            <div className="space-y-8 py-8 px-2 sm:px-4">
+                                {page.sections.map((section, idx) => {
+                                    const isSelected = selectedSectionId === section.id;
+                                    const isDragging = draggedIndex === idx;
+                                    const isTarget = dragOverIndex === idx;
 
-                                        <SectionPreviewer section={section} themeColor={globalThemeColor} />
-                                    </div>
-                                ))}
+                                    return (
+                                        <div
+                                            key={section.id}
+                                            draggable
+                                            onDragStart={(e) => handleCanvasDragStart(e, idx)}
+                                            onDragOver={(e) => handleCanvasDragOver(e, idx)}
+                                            onDrop={(e) => handleCanvasDrop(e, idx)}
+                                            onDragEnd={handleCanvasDragEnd}
+                                            onClick={() => setSelectedSectionId(section.id)}
+                                            className={`group relative rounded-3xl border transition-all duration-200 ${isSelected
+                                                ? "border-indigo-500 shadow-xl ring-2 ring-indigo-500/50 bg-slate-900/10"
+                                                : "border-slate-800 hover:border-slate-700"
+                                                } ${isDragging ? "opacity-30 scale-[0.98] border-dashed border-indigo-400" : ""} ${isTarget ? "border-t-4 border-t-indigo-500 ring-4 ring-indigo-500/20" : ""}`}
+                                        >
+                                            {/* Canvas Section Control Bar Header (Appears on Hover / Selection) */}
+                                            <div className={`absolute -top-4 left-4 right-4 h-8 px-3 rounded-xl bg-slate-900 border border-slate-700/80 shadow-lg flex items-center justify-between z-20 backdrop-blur transition-opacity duration-200 ${isSelected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
+                                                <div className="flex items-center gap-2">
+                                                    {/* Drag Handle Icon */}
+                                                    <div
+                                                        className="p-1 rounded hover:bg-slate-800 text-indigo-400 cursor-grab active:cursor-grabbing flex items-center gap-1"
+                                                        title="Drag with cursor to reorder section"
+                                                    >
+                                                        <GripVertical className="w-4 h-4" />
+                                                        <Move className="w-3 h-3 text-slate-400" />
+                                                    </div>
+                                                    <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-300 font-mono">
+                                                        {section.type.toUpperCase()}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                                                    {/* Size Badge */}
+                                                    <span className="text-[10px] text-slate-400 font-mono px-2 py-0.5 rounded bg-slate-950 border border-slate-800">
+                                                        📏 {section.minHeight || 280}px
+                                                    </span>
+
+                                                    <button
+                                                        onClick={() => handleSectionReorder(idx, "up")}
+                                                        disabled={idx === 0}
+                                                        className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30"
+                                                        title="Move Up"
+                                                    >
+                                                        <ArrowUp className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSectionReorder(idx, "down")}
+                                                        disabled={idx === page.sections.length - 1}
+                                                        className="p-1 rounded text-slate-400 hover:text-white disabled:opacity-30"
+                                                        title="Move Down"
+                                                    >
+                                                        <ArrowDown className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDuplicateSection(idx)}
+                                                        className="p-1 rounded text-slate-400 hover:text-indigo-400"
+                                                        title="Duplicate"
+                                                    >
+                                                        <Copy className="w-3.5 h-3.5" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteSection(section.id)}
+                                                        className="p-1 rounded text-slate-400 hover:text-red-400"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* Render Section Content */}
+                                            <div className="pt-2">
+                                                <SectionPreviewer section={section} themeColor={globalThemeColor} />
+                                            </div>
+
+                                            {/* Bottom Interactive Mouse Resize Bar */}
+                                            <div
+                                                onMouseDown={(e) => handleStartResize(e, section.id, section.minHeight || 280)}
+                                                className="group/resize h-4 w-full bg-slate-900/60 hover:bg-indigo-600/80 cursor-ns-resize flex items-center justify-center rounded-b-3xl border-t border-slate-800 transition-all select-none relative z-10"
+                                                title="Click and drag vertically to resize section height with cursor"
+                                            >
+                                                <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 group-hover/resize:text-white">
+                                                    <GripHorizontal className="w-4 h-3" />
+                                                    <span className="hidden sm:inline">Drag to Resize Height</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
@@ -572,16 +759,22 @@ export default function VisualEditorPage() {
 }
 
 // ==========================================
-// RENDER SANBOX SECTION PREVIEWER
+// RENDER SANDBOX SECTION PREVIEWER
 // ==========================================
 
 function SectionPreviewer({ section, themeColor }: { section: PageSection; themeColor: string }) {
+    const customStyle: React.CSSProperties = {
+        minHeight: section.minHeight ? `${section.minHeight}px` : undefined,
+        paddingTop: section.paddingY ? `${section.paddingY}px` : undefined,
+        paddingBottom: section.paddingY ? `${section.paddingY}px` : undefined,
+    };
+
     switch (section.type) {
         case "hero":
             return (
-                <section className="py-12 sm:py-16 px-4 text-center relative overflow-hidden">
+                <section style={customStyle} className="py-12 sm:py-16 px-4 text-center relative overflow-hidden flex flex-col justify-center">
                     <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none" style={{ backgroundColor: themeColor }} />
-                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-4xl mx-auto text-left">
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center max-w-4xl mx-auto text-left w-full">
                         <div className="lg:col-span-7">
                             <h1 className="text-2xl sm:text-3xl font-extrabold text-white leading-tight mb-4">{section.title}</h1>
                             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed mb-6">{section.subtitle}</p>
@@ -604,7 +797,7 @@ function SectionPreviewer({ section, themeColor }: { section: PageSection; theme
 
         case "features":
             return (
-                <section className="py-10 px-4 border-t border-slate-900 max-w-4xl mx-auto">
+                <section style={customStyle} className="py-10 px-4 border-t border-slate-900 max-w-4xl mx-auto flex flex-col justify-center">
                     <h2 className="text-xl font-bold text-center text-white mb-2">{section.title}</h2>
                     {section.subtitle && <p className="text-slate-400 text-xs text-center mb-8">{section.subtitle}</p>}
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -623,10 +816,10 @@ function SectionPreviewer({ section, themeColor }: { section: PageSection; theme
 
         case "pricing":
             return (
-                <section className="py-10 px-4 border-t border-slate-900 max-w-4xl mx-auto">
+                <section style={customStyle} className="py-10 px-4 border-t border-slate-900 max-w-4xl mx-auto flex flex-col justify-center">
                     <h2 className="text-xl font-bold text-center text-white mb-2">{section.title}</h2>
                     {section.subtitle && <p className="text-slate-400 text-xs text-center mb-8">{section.subtitle}</p>}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto w-full">
                         {Array.isArray(section.content) && section.content.map((plan: any, idx: number) => (
                             <div key={idx} className={`p-6 rounded-2xl border flex flex-col justify-between ${idx === 1 ? "bg-slate-900/60 border-indigo-500/50" : "bg-slate-900/20 border-slate-850"}`}>
                                 <div>
@@ -655,9 +848,9 @@ function SectionPreviewer({ section, themeColor }: { section: PageSection; theme
 
         case "faq":
             return (
-                <section className="py-10 px-4 border-t border-slate-900 max-w-3xl mx-auto">
+                <section style={customStyle} className="py-10 px-4 border-t border-slate-900 max-w-3xl mx-auto flex flex-col justify-center">
                     <h2 className="text-xl font-bold text-center text-white mb-8">{section.title}</h2>
-                    <div className="space-y-3 text-left">
+                    <div className="space-y-3 text-left w-full">
                         {Array.isArray(section.content) && section.content.map((faq: any, idx: number) => (
                             <div key={idx} className="p-5 rounded-xl bg-slate-900/30 border border-slate-850">
                                 <h3 className="text-xs font-bold text-white mb-1.5">{faq.question}</h3>
@@ -670,7 +863,7 @@ function SectionPreviewer({ section, themeColor }: { section: PageSection; theme
 
         case "cta":
             return (
-                <section className="py-10 px-6 my-6 text-center rounded-2xl border border-slate-850 bg-gradient-to-b from-slate-900 to-slate-950 max-w-4xl mx-auto relative overflow-hidden">
+                <section style={customStyle} className="py-10 px-6 my-6 text-center rounded-2xl border border-slate-850 bg-gradient-to-b from-slate-900 to-slate-950 max-w-4xl mx-auto relative overflow-hidden flex flex-col justify-center items-center">
                     <div className="absolute inset-0 opacity-5 blur-xl pointer-events-none" style={{ backgroundColor: themeColor }} />
                     <h2 className="text-xl sm:text-2xl font-bold text-white mb-2 max-w-xl mx-auto">{section.title}</h2>
                     {section.subtitle && <p className="text-slate-400 text-xs mb-6">{section.subtitle}</p>}
@@ -686,4 +879,3 @@ function SectionPreviewer({ section, themeColor }: { section: PageSection; theme
             return null;
     }
 }
-
